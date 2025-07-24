@@ -30,4 +30,7 @@ class Inventory:
         mysql_insert_row_query = "CREATE TABLE `%s` (Inventory VARCHAR(100), id INT PRIMARY KEY)"
         mysql_insert_row_values = (char_id,)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
-        return
+    def add_item(self, item):
+        mysql_insert_row_query = "INSERT INTO items (Items) VALUES (%s)"
+        mysql_insert_row_values = (item,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)

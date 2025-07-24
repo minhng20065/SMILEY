@@ -11,6 +11,7 @@ import sheet
 from sheet import Sheet
 from errors import Error
 from select1 import Select
+from inventory import Inventory
 import config
 
 load_dotenv()
@@ -34,6 +35,7 @@ async def on_ready():
 sheet = Sheet()
 error = Error()
 select = Select()
+inventory = Inventory()
 
 @bot.command()
 async def register(ctx, *args):
@@ -250,6 +252,10 @@ async def delete_sheet(ctx, char_id):
             await ctx.send("Oky")
         else:
             await ctx.send("Invalid answer, please try again.")
+@bot.command()
+async def register_item(ctx, item):
+    inventory.add_item(item)
+    await ctx.send("This item has been included.")
 
 async def assign(ctx, slot, char_id):
     """This function prompts the user to assign an ability for their character, for
