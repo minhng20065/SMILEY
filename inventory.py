@@ -30,7 +30,8 @@ class Inventory:
         mysql_insert_row_query = "INSERT INTO items (Items) VALUES (%s)"
         mysql_insert_row_values = (item,)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
-    def find_item(self, name, id):
+    def find_item(self, name, id, items):
+        i = 0
         mysql_insert_row_query = (f"SELECT * FROM items WHERE id = {id}")
         self.connect(mysql_insert_row_query, 0, False, False)
         if self.data is None:
@@ -38,5 +39,8 @@ class Inventory:
         else:
             mysql_insert_row_query = "INSERT INTO inventory (Inventory, id, char_id) VALUES (%s, %s, %s)"
             mysql_insert_row_values = (self.data[0], self.data[1], name)
-            self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+            for i in range(items):
+                print("sex")
+                self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+                i = i + 1
             return self.data

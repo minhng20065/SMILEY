@@ -270,13 +270,26 @@ async def add_to_inventory(ctx, id):
         if sheet.verify_id(sheet.get_id(reply.content)) is False:
             await ctx.send("This character could not be found!")
         else:
-            await insert_into_inventory(ctx, id, reply.content)
+            await promptMultiple(ctx, id, reply.content)
 
+async def promptMultiple(ctx, id, name):
+    await ctx.send("How many of this item should be added?")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        if (error.verifyNumeric(reply.content) is False):
+            await ctx.send("Invalid input!")
+        else:
+            await insert_into_inventory(ctx, id, name, reply.content)
 
-async def insert_into_inventory(ctx, id, name):
-    data = inventory.find_item(sheet.get_id(name), id)
+async def insert_into_inventory(ctx, id, name, items):
+    data = inventory.find_item(sheet.get_id(name), id, int(items))
     if data is None:
-        await ctx.send("Could not find " + data)
+        await ctx.send(f"Could not find {data[0]}")
     else:
         await ctx.send(f"Added {data[0]}")
 
