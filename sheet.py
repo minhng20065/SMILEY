@@ -59,7 +59,6 @@ class Sheet:
         mysql_insert_row_query = ("INSERT INTO reputation (government, resistance, fbl, " +
         "peace_corps) VALUES (DEFAULT, DEFAULT, DEFAULT, DEFAULT)")
         self.connect(mysql_insert_row_query, 0, True, False)
-        self.inventory.addInventory(args[0])
         return
 
     def get_id(self, name):

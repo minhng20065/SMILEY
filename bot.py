@@ -257,6 +257,29 @@ async def register_item(ctx, item):
     inventory.add_item(item)
     await ctx.send("This item has been included.")
 
+@bot.command()
+async def add_to_inventory(ctx, id):
+    await ctx.send("Which character would you like to add this item to?")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        if sheet.verify_id(sheet.get_id(reply.content)) is False:
+            await ctx.send("This character could not be found!")
+        else:
+            await insert_into_inventory(ctx, id, reply.content)
+
+
+async def insert_into_inventory(ctx, id, name):
+    data = inventory.find_item(sheet.get_id(name), id)
+    if data is None:
+        await ctx.send("Could not find " + data)
+    else:
+        await ctx.send(f"Added {data[0]}")
+
 async def assign(ctx, slot, char_id):
     """This function prompts the user to assign an ability for their character, for
     each slot. It then calls a function from the sheet file to put it in the database."""
