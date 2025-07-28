@@ -312,3 +312,4 @@ class Sheet:
         if self.data is None:
             return False
         return True
+    

@@ -273,6 +273,10 @@ async def add_to_inventory(ctx, id):
             await promptMultiple(ctx, id, reply.content)
 
 async def promptMultiple(ctx, id, name):
+    max = select.select_secondary(sheet.get_id(name))[12]
+    max = int(sheet.clean_up(str(max)).replace(",", ""))
+    print(max)
+    inv = int(sheet.clean_up(str(inventory.find_inv_count(sheet.get_id(name)))).replace(",", ""))
     await ctx.send("How many of this item should be added?")
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
@@ -283,6 +287,9 @@ async def promptMultiple(ctx, id, name):
     else:
         if (error.verifyNumeric(reply.content) is False):
             await ctx.send("Invalid input!")
+        elif (max < inv + int(reply.content)):
+            quantity = (inv + int(reply.content))
+            await ctx.send(f"This character's inventory is too full to hold this many items! {quantity} / {max}")
         else:
             await insert_into_inventory(ctx, id, name, reply.content)
 

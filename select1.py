@@ -67,6 +67,7 @@ class Select:
         character id.'''
         mysql_insert_row_query = "SELECT * FROM secondary_stats WHERE char_id = " + char_id
         self.sheet.connect(mysql_insert_row_query, 0, False, False)
+        return self.sheet.data
 
     def select_ability(self, char_id, slot):
         '''This function selects all the ability slots for a character given its 
