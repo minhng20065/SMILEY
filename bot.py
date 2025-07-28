@@ -272,6 +272,24 @@ async def add_to_inventory(ctx, id):
         else:
             await promptMultiple(ctx, id, reply.content)
 
+@bot.command()
+async def show_inv(ctx):
+    await ctx.send("Which character's inventory do you want shown?")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        if sheet.verify_id(sheet.get_id(reply.content)) is False:
+            await ctx.send("This character could not be found!")
+        else:
+            data = inventory.show_inv(sheet.get_id(reply.content))
+            inv = "```"
+            for datum in data:
+                inv = inv + sheet.clean_up(str(datum)).replace(",", "").replace("'", "") + "\n"
+            await ctx.send(inv + "```")
 async def promptMultiple(ctx, id, name):
     max = select.select_secondary(sheet.get_id(name))[12]
     max = int(sheet.clean_up(str(max)).replace(",", ""))

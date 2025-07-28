@@ -47,3 +47,7 @@ class Inventory:
         mysql_insert_row_query = (f"SELECT COUNT(*) FROM inventory WHERE char_id = {char_id}")
         self.connect(mysql_insert_row_query, 0, False, False)
         return self.data
+    def show_inv(self, char_id):
+        mysql_insert_row_query = (f"SELECT Inventory FROM inventory WHERE char_id = {char_id}")
+        self.connect(mysql_insert_row_query, 0, False, True)
+        return self.data
