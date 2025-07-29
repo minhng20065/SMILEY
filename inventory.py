@@ -51,3 +51,12 @@ class Inventory:
         mysql_insert_row_query = (f"SELECT Inventory FROM inventory WHERE char_id = {char_id}")
         self.connect(mysql_insert_row_query, 0, False, True)
         return self.data
+    def find_item_id(self, name):
+        mysql_insert_row_query = (f"SELECT id FROM items WHERE Items = '{name}'")
+        self.connect(mysql_insert_row_query, 0, False, False)
+        return self.data
+    def find_item_in_char(self, name, char_id):
+        mysql_insert_row_query = (f"SELECT Inventory FROM inventory WHERE Inventory = '{name}' AND char_id = '{int(char_id)}'")
+        print(name)
+        self.connect(mysql_insert_row_query, 0, False, False)
+        return self.data
