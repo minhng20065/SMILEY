@@ -12,7 +12,6 @@ from sheet import Sheet
 from errors import Error
 from select1 import Select
 from inventory import Inventory
-from flavor import Flavor
 import config
 
 load_dotenv()
@@ -37,7 +36,6 @@ sheet = Sheet()
 error = Error()
 select = Select()
 inventory = Inventory()
-flavor = Flavor()
 
 @bot.command()
 async def register(ctx, *args):
@@ -304,7 +302,7 @@ async def use_item(ctx, char, name):
     elif inventory.find_item_in_char(name, sheet.get_id(char)) is None:
         await ctx.send("This item could not be found in the character's inventory!")
     else:
-        await ctx.send(char + flavor.inventoryUseText(int(id)))
+        await ctx.send(char + " " + sheet.clean_up(str(inventory.print_text(True, id))).replace(',', '').strip('"'))
 @bot.command()
 async def drop_item(ctx, char, name):
     id = inventory.find_item_id(name)
@@ -318,6 +316,24 @@ async def drop_item(ctx, char, name):
     else:
         await ctx.send("Dropped item!")
         inventory.remove_item(name, sheet.get_id(char))
+@bot.command()
+async def add_use_flavor(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        await ctx.send("Please input your text here.")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            inventory.add_use_text(str(reply.content), id)
+            await ctx.send("Added flavor text!")
+
 async def promptMultiple(ctx, id, name):
     max = select.select_secondary(sheet.get_id(name))[12]
     max = int(sheet.clean_up(str(max)).replace(",", ""))
