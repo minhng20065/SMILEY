@@ -57,6 +57,9 @@ class Inventory:
         return self.data
     def find_item_in_char(self, name, char_id):
         mysql_insert_row_query = (f"SELECT Inventory FROM inventory WHERE Inventory = '{name}' AND char_id = '{int(char_id)}'")
-        print(name)
         self.connect(mysql_insert_row_query, 0, False, False)
         return self.data
+    def remove_item(self, name, char_id):
+        mysql_insert_row_query = (f"DELETE FROM inventory WHERE Inventory = '{name}' AND char_id = {int(char_id)} ORDER BY instance_id DESC LIMIT 1;")
+        self.connect(mysql_insert_row_query, 0, True, False)
+        

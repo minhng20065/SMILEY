@@ -305,7 +305,19 @@ async def use_item(ctx, char, name):
         await ctx.send("This item could not be found in the character's inventory!")
     else:
         await ctx.send(char + flavor.inventoryUseText(int(id)))
-    
+@bot.command()
+async def drop_item(ctx, char, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    elif sheet.verify_id(sheet.get_id(char)) is False:
+        await ctx.send("This character could not be found!")
+    elif inventory.find_item_in_char(name, sheet.get_id(char)) is None:
+        await ctx.send("This item could not be found in the character's inventory!")
+    else:
+        await ctx.send("Dropped item!")
+        inventory.remove_item(name, sheet.get_id(char))
 async def promptMultiple(ctx, id, name):
     max = select.select_secondary(sheet.get_id(name))[12]
     max = int(sheet.clean_up(str(max)).replace(",", ""))
