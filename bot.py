@@ -354,6 +354,24 @@ async def add_drop_flavor(ctx, name):
             inventory.add_text(False, True, str(reply.content), id)
             await ctx.send("Added flavor text!")
 
+@bot.command()
+async def add_equip_flavor(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        await ctx.send("Please input your text here.")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            inventory.add_text(False, False, str(reply.content), id)
+            await ctx.send("Added flavor text!")
+
 async def promptMultiple(ctx, id, name):
     max = select.select_secondary(sheet.get_id(name))[12]
     max = int(sheet.clean_up(str(max)).replace(",", ""))
@@ -380,7 +398,8 @@ async def insert_into_inventory(ctx, id, name, items):
     if data is None:
         await ctx.send(f"Could not find {data[0]}")
     else:
-        await ctx.send(f"Added {data[0]}")
+        print(id)
+        await ctx.send(name + ' ' + sheet.clean_up(str(inventory.print_text(False, False, id))).replace(',', '').strip('"'))
 
 async def assign(ctx, slot, char_id):
     """This function prompts the user to assign an ability for their character, for

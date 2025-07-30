@@ -71,6 +71,10 @@ class Inventory:
             mysql_insert_row_query = ("INSERT INTO drop_flavor_text VALUES (%s, %s)")
             mysql_insert_row_values = (text, id)
             self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        else:
+           mysql_insert_row_query = ("INSERT INTO equip_flavor_text VALUES (%s, %s)")
+           mysql_insert_row_values = (text, id)
+           self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False) 
     def print_text(self, use, drop, id):
         if (use):
             mysql_insert_row_query = (f"SELECT text FROM use_flavor_text WHERE item_id = {int(id)}")
@@ -80,3 +84,8 @@ class Inventory:
             mysql_insert_row_query = (f"SELECT text FROM drop_flavor_text WHERE item_id = {int(id)}")
             self.connect(mysql_insert_row_query, 0, False, False)
             return self.data
+        else:
+            mysql_insert_row_query = (f"SELECT text FROM equip_flavor_text WHERE item_id = {int(id)}")
+            self.connect(mysql_insert_row_query, 0, False, False)
+            return self.data
+        
