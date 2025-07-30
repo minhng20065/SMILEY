@@ -88,4 +88,20 @@ class Inventory:
             mysql_insert_row_query = (f"SELECT text FROM equip_flavor_text WHERE item_id = {int(id)}")
             self.connect(mysql_insert_row_query, 0, False, False)
             return self.data
+    def remove_item(self, id):
+        mysql_insert_row_query = ("DELETE FROM items WHERE id = %s")
+        mysql_insert_row_values = (id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = ("DELETE FROM drop_flavor_text WHERE item_id = %s")
+        mysql_insert_row_values = (id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = ("DELETE FROM equip_flavor_text WHERE item_id = %s")
+        mysql_insert_row_values = (id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = ("DELETE FROM inventory WHERE id = %s")
+        mysql_insert_row_values = (id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = ("DELETE FROM use_flavor_text WHERE item_id = %s")
+        mysql_insert_row_values = (id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
         

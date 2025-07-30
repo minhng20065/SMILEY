@@ -371,6 +371,15 @@ async def add_equip_flavor(ctx, name):
         else:
             inventory.add_text(False, False, str(reply.content), id)
             await ctx.send("Added flavor text!")
+@bot.command()
+async def remove_item(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        inventory.remove_item(id)
+        await ctx.send("Item removed!")
 
 async def promptMultiple(ctx, id, name):
     max = select.select_secondary(sheet.get_id(name))[12]
