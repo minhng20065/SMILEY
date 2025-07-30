@@ -302,7 +302,9 @@ async def use_item(ctx, char, name):
     elif inventory.find_item_in_char(name, sheet.get_id(char)) is None:
         await ctx.send("This item could not be found in the character's inventory!")
     else:
-        await ctx.send(char + " " + sheet.clean_up(str(inventory.print_text(True, id))).replace(',', '').strip('"'))
+        inventory.remove_item(name, sheet.get_id(char))
+        await ctx.send(char + " " + sheet.clean_up(str(inventory.print_text(True, False, id))).replace(',', '').strip('"'))
+        
 @bot.command()
 async def drop_item(ctx, char, name):
     id = inventory.find_item_id(name)
@@ -314,8 +316,8 @@ async def drop_item(ctx, char, name):
     elif inventory.find_item_in_char(name, sheet.get_id(char)) is None:
         await ctx.send("This item could not be found in the character's inventory!")
     else:
-        await ctx.send("Dropped item!")
         inventory.remove_item(name, sheet.get_id(char))
+        await ctx.send(char + ' ' + sheet.clean_up(str(inventory.print_text(False, True, id))).replace(',', '').strip('"'))
 @bot.command()
 async def add_use_flavor(ctx, name):
     id = inventory.find_item_id(name)
@@ -331,7 +333,25 @@ async def add_use_flavor(ctx, name):
         except asyncio.TimeoutError:
             await ctx.send('Timeout occurred')
         else:
-            inventory.add_use_text(str(reply.content), id)
+            inventory.add_text(True, False, str(reply.content), id)
+            await ctx.send("Added flavor text!")
+
+@bot.command()
+async def add_drop_flavor(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        await ctx.send("Please input your text here.")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            inventory.add_text(False, True, str(reply.content), id)
             await ctx.send("Added flavor text!")
 
 async def promptMultiple(ctx, id, name):
