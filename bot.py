@@ -256,6 +256,18 @@ async def delete_sheet(ctx, char_id):
 async def register_item(ctx, item):
     inventory.add_item(item)
     await ctx.send("This item has been included.")
+    id = inventory.find_item_id(item)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    await ctx.send("Please input your flavor text here.")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        inventory.add_text(False, False, str(reply.content), id)
+        await ctx.send("Added flavor text!")
 
 @bot.command()
 async def add_to_inventory(ctx, id):
@@ -304,7 +316,7 @@ async def use_item(ctx, char, name):
     else:
         inventory.remove_item(name, sheet.get_id(char))
         await ctx.send(char + " " + sheet.clean_up(str(inventory.print_text(True, False, id))).replace(',', '').strip('"'))
-        
+
 @bot.command()
 async def drop_item(ctx, char, name):
     id = inventory.find_item_id(name)
@@ -318,6 +330,7 @@ async def drop_item(ctx, char, name):
     else:
         inventory.remove_item(name, sheet.get_id(char))
         await ctx.send(char + ' ' + sheet.clean_up(str(inventory.print_text(False, True, id))).replace(',', '').strip('"'))
+
 @bot.command()
 async def add_use_flavor(ctx, name):
     id = inventory.find_item_id(name)
@@ -325,7 +338,7 @@ async def add_use_flavor(ctx, name):
     if id is None:
         await ctx.send("Item could not be found!")
     else:
-        await ctx.send("Please input your text here.")
+        await ctx.send("Please input your flavor text here.")
         def check(m):
             return m.author == ctx.author and m.channel == ctx.channel
         try:
