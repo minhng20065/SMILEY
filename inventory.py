@@ -43,6 +43,14 @@ class Inventory:
         mysql_insert_row_values = ('Weapon', name, int(id), int(char_id), int(ATK), 0, 0)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
+    def equip_weapon(self, id):
+        mysql_insert_row_query = "UPDATE equippable_items SET Equipped = %s WHERE id = %s AND Equipped = %s"
+        mysql_insert_row_values = (0, id, 1)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = "UPDATE equippable_items SET Equipped = %s WHERE id = %s"
+        mysql_insert_row_values = (1, id)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+
     def find_item(self, name, id, items):
         i = 0
         mysql_insert_row_query = (f"SELECT * FROM items WHERE id = {id}")

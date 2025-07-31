@@ -418,6 +418,27 @@ async def add_weapon(ctx, name):
                 await insert_into_inventory(ctx, id, reply.content, 1)
                 await add_weapon_to_sheet(ctx, id, name, reply.content)
 
+@bot.command()
+async def equip_weapon(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        await ctx.send("Which character would you like to equip this weapon to?")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            if sheet.verify_id(sheet.get_id(reply.content)) is False:
+                await ctx.send("This character could not be found!")
+            else:
+                inventory.equip_weapon(id)
+                await ctx.send("Equipped!")
+
 async def add_weapon_to_sheet(ctx, id, name, char):
     atk = inventory.find_atk(id)
     atk = int(sheet.clean_up(str(atk)).replace(",", ""))
