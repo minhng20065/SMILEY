@@ -32,10 +32,15 @@ class Inventory:
         mysql_insert_row_values = (item,)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
-    def add_weapon(self, item, id, atk):
-        mysql_insert_row_query = "INSERT INTO weapons (Weapon, id, ATK) VALUES (%s, %s, %s)"
-        mysql_insert_row_values = (item, id, atk)
-        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+    def add_weapon(self, item, id, atk, weapon):
+        if (weapon):
+            mysql_insert_row_query = "INSERT INTO weapons (Weapon, id, ATK) VALUES (%s, %s, %s)"
+            mysql_insert_row_values = (item, id, atk)
+            self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        else:
+            mysql_insert_row_query = "INSERT INTO armor (Armor, id, DEF) VALUES (%s, %s, %s)"
+            mysql_insert_row_values = (item, id, atk)
+            self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
     def add_weapon_to_sheet(self, name, id, char_id, ATK):
         mysql_insert_row_query = "INSERT INTO equippable_items (Type, Name, id, char_id, ATK, Damage, Equipped) VALUES (%s, %s, %s, %s, %s, %s, %s)"

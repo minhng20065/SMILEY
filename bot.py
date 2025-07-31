@@ -407,7 +407,7 @@ async def register_weapon(ctx, name):
     except asyncio.TimeoutError:
         await ctx.send('Timeout occurred')
     else:
-        inventory.add_weapon(name, id, str(reply.content))
+        inventory.add_weapon(name, id, str(reply.content), True)
         await ctx.send("Weapon added!")
 
 @bot.command()
@@ -451,6 +451,21 @@ async def equip_weapon(ctx, name):
             else:
                 inventory.equip_weapon(id)
                 await ctx.send("Equipped!")
+@bot.command()
+async def register_armor(ctx, name):
+    inventory.add_item(name)
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    await ctx.send("What's the defense of this armor?")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        inventory.add_weapon(name, id, str(reply.content), False)
+        await ctx.send("Armor added!")
 
 async def add_weapon_to_sheet(ctx, id, name, char):
     atk = inventory.find_atk(id)
