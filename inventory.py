@@ -26,10 +26,23 @@ class Inventory:
             cursor.close()
             connection.close()
             return False
+
     def add_item(self, item):
         mysql_insert_row_query = "INSERT INTO items (Items) VALUES (%s)"
         mysql_insert_row_values = (item,)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+
+    def add_weapon(self, item, id, atk):
+        mysql_insert_row_query = "INSERT INTO weapons (Weapon, id, ATK) VALUES (%s, %s, %s)"
+        mysql_insert_row_values = (item, id, atk)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+
+    def add_weapon_to_sheet(self, name, id, char_id, ATK):
+        mysql_insert_row_query = "INSERT INTO equippable_items (Type, Name, id, char_id, ATK, Damage, Equipped) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        print(ATK)
+        mysql_insert_row_values = ('Weapon', name, int(id), int(char_id), int(ATK), 0, 0)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+
     def find_item(self, name, id, items):
         i = 0
         mysql_insert_row_query = (f"SELECT * FROM items WHERE id = {id}")
@@ -43,6 +56,10 @@ class Inventory:
                 self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
                 i = i + 1
             return self.data
+    def find_atk(self, id):
+        mysql_insert_row_query = (f"SELECT ATK FROM weapons WHERE id = {id}")
+        self.connect(mysql_insert_row_query, 0, False, False)
+        return self.data
     def find_inv_count(self, char_id):
         mysql_insert_row_query = (f"SELECT COUNT(*) FROM inventory WHERE char_id = {char_id}")
         self.connect(mysql_insert_row_query, 0, False, False)

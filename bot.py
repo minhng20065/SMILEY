@@ -381,6 +381,49 @@ async def remove_item(ctx, name):
         inventory.remove_item(id)
         await ctx.send("Item removed!")
 
+@bot.command()
+async def register_weapon(ctx, name):
+    inventory.add_item(name)
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    await ctx.send("What's the attack power of this weapon?")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        inventory.add_weapon(name, id, str(reply.content))
+        await ctx.send("Weapon added!")
+
+@bot.command()
+async def add_weapon(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        await ctx.send("Which character would you like to add this weapon to?")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            if sheet.verify_id(sheet.get_id(reply.content)) is False:
+                await ctx.send("This character could not be found!")
+            else:
+                await insert_into_inventory(ctx, id, reply.content, 1)
+                await add_weapon_to_sheet(ctx, id, name, reply.content)
+
+async def add_weapon_to_sheet(ctx, id, name, char):
+    atk = inventory.find_atk(id)
+    atk = int(sheet.clean_up(str(atk)).replace(",", ""))
+    inventory.add_weapon_to_sheet(name, id, sheet.get_id(char), atk)
+    await ctx.send("Weapon added to inventory!")
+    
 async def promptMultiple(ctx, id, name):
     max = select.select_secondary(sheet.get_id(name))[12]
     max = int(sheet.clean_up(str(max)).replace(",", ""))
