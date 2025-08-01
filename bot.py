@@ -266,7 +266,7 @@ async def register_item(ctx, item):
     except asyncio.TimeoutError:
         await ctx.send('Timeout occurred')
     else:
-        inventory.add_text(False, False, str(reply.content), id)
+        inventory.add_text(False, False, True, str(reply.content), id)
         await ctx.send("Added flavor text!")
 
 @bot.command()
@@ -315,7 +315,7 @@ async def use_item(ctx, char, name):
         await ctx.send("This item could not be found in the character's inventory!")
     else:
         inventory.remove_item(name, sheet.get_id(char))
-        await ctx.send(char + " " + sheet.clean_up(str(inventory.print_text(True, False, id))).replace(',', '').strip('"'))
+        await ctx.send(char + " " + sheet.clean_up(str(inventory.print_text(True, False, False, id))).replace(',', '').strip('"'))
 
 @bot.command()
 async def drop_item(ctx, char, name):
@@ -329,7 +329,7 @@ async def drop_item(ctx, char, name):
         await ctx.send("This item could not be found in the character's inventory!")
     else:
         inventory.remove_item(name, sheet.get_id(char))
-        await ctx.send(char + ' ' + sheet.clean_up(str(inventory.print_text(False, True, id))).replace(',', '').strip('"'))
+        await ctx.send(char + ' ' + sheet.clean_up(str(inventory.print_text(False, True, False, id))).replace(',', '').strip('"'))
 
 @bot.command()
 async def add_use_flavor(ctx, name):
@@ -346,7 +346,7 @@ async def add_use_flavor(ctx, name):
         except asyncio.TimeoutError:
             await ctx.send('Timeout occurred')
         else:
-            inventory.add_text(True, False, str(reply.content), id)
+            inventory.add_text(True, False, False, str(reply.content), id)
             await ctx.send("Added flavor text!")
 
 @bot.command()
@@ -364,11 +364,11 @@ async def add_drop_flavor(ctx, name):
         except asyncio.TimeoutError:
             await ctx.send('Timeout occurred')
         else:
-            inventory.add_text(False, True, str(reply.content), id)
+            inventory.add_text(False, True, False, str(reply.content), id)
             await ctx.send("Added flavor text!")
 
 @bot.command()
-async def add_equip_flavor(ctx, name):
+async def add_equippable_flavor(ctx, name):
     id = inventory.find_item_id(name)
     id = sheet.clean_up(str(id)).replace(",", "")
     if id is None:
@@ -382,7 +382,7 @@ async def add_equip_flavor(ctx, name):
         except asyncio.TimeoutError:
             await ctx.send('Timeout occurred')
         else:
-            inventory.add_text(False, False, str(reply.content), id)
+            inventory.add_text(False, False, False, str(reply.content), id)
             await ctx.send("Added flavor text!")
 @bot.command()
 async def remove_item(ctx, name):
@@ -450,7 +450,7 @@ async def equip_weapon(ctx, name):
                 await ctx.send("This character could not be found!")
             else:
                 inventory.equip_weapon(id, sheet.get_id(reply.content), True)
-                await ctx.send("Equipped!")
+                await ctx.send(str(reply.content) + ' ' + sheet.clean_up(str(inventory.print_text(False, False, True, id))).replace(',', '').strip('"'))
 @bot.command()
 async def register_armor(ctx, name):
     inventory.add_item(name)
@@ -507,8 +507,25 @@ async def equip_armor(ctx, name):
                 await ctx.send("This character could not be found!")
             else:
                 inventory.equip_weapon(id, sheet.get_id(reply.content), False)
-                await ctx.send("Equipped!")
-                
+                await ctx.send(str(reply.content) + ' ' + sheet.clean_up(str(inventory.print_text(False, False, False, id))).replace(',', '').strip('"'))
+@bot.command()
+async def add_equip_flavor(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        await ctx.send("Please input your flavor text here.")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            inventory.add_text(True, False, False, str(reply.content), id)
+            await ctx.send("Added flavor text!")
+
 async def add_weapon_to_sheet(ctx, id, name, char):
     atk = inventory.find_atk(id, True)
     atk = int(sheet.clean_up(str(atk)).replace(",", ""))
@@ -548,7 +565,7 @@ async def insert_into_inventory(ctx, id, name, items):
         await ctx.send(f"Could not find {data[0]}")
     else:
         print(id)
-        await ctx.send(name + ' ' + sheet.clean_up(str(inventory.print_text(False, False, id))).replace(',', '').strip('"'))
+        await ctx.send(name + ' ' + sheet.clean_up(str(inventory.print_text(False, False, True, id))).replace(',', '').strip('"'))
 
 async def assign(ctx, slot, char_id):
     """This function prompts the user to assign an ability for their character, for

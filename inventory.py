@@ -109,7 +109,7 @@ class Inventory:
     def remove_item(self, name, char_id):
         mysql_insert_row_query = (f"DELETE FROM inventory WHERE Inventory = '{name}' AND char_id = {int(char_id)} ORDER BY instance_id DESC LIMIT 1;")
         self.connect(mysql_insert_row_query, 0, True, False)
-    def add_text(self, use, drop, text, id):
+    def add_text(self, use, drop, equip, text, id):
         if (use):
             mysql_insert_row_query = ("INSERT INTO use_flavor_text VALUES (%s, %s)")
             mysql_insert_row_values = (text, id)
@@ -118,11 +118,15 @@ class Inventory:
             mysql_insert_row_query = ("INSERT INTO drop_flavor_text VALUES (%s, %s)")
             mysql_insert_row_values = (text, id)
             self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
-        else:
+        elif (equip):
            mysql_insert_row_query = ("INSERT INTO equip_flavor_text VALUES (%s, %s)")
            mysql_insert_row_values = (text, id)
-           self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False) 
-    def print_text(self, use, drop, id):
+           self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        else:
+            mysql_insert_row_query = ("INSERT INTO equippable_flavor_text VALUES (%s, %s)")
+            mysql_insert_row_values = (text, id)
+            self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+    def print_text(self, use, drop, equip, id):
         if (use):
             mysql_insert_row_query = (f"SELECT text FROM use_flavor_text WHERE item_id = {int(id)}")
             self.connect(mysql_insert_row_query, 0, False, False)
@@ -131,8 +135,12 @@ class Inventory:
             mysql_insert_row_query = (f"SELECT text FROM drop_flavor_text WHERE item_id = {int(id)}")
             self.connect(mysql_insert_row_query, 0, False, False)
             return self.data
-        else:
+        elif (equip):
             mysql_insert_row_query = (f"SELECT text FROM equip_flavor_text WHERE item_id = {int(id)}")
+            self.connect(mysql_insert_row_query, 0, False, False)
+            return self.data
+        else:
+            mysql_insert_row_query = (f"SELECT text FROM equippable_flavor_text WHERE item_id = {int(id)}")
             self.connect(mysql_insert_row_query, 0, False, False)
             return self.data
     def remove_item(self, id):
