@@ -449,7 +449,7 @@ async def equip_weapon(ctx, name):
             if sheet.verify_id(sheet.get_id(reply.content)) is False:
                 await ctx.send("This character could not be found!")
             else:
-                inventory.equip_weapon(id)
+                inventory.equip_weapon(id, sheet.get_id(reply.content), True)
                 await ctx.send("Equipped!")
 @bot.command()
 async def register_armor(ctx, name):
@@ -467,11 +467,59 @@ async def register_armor(ctx, name):
         inventory.add_weapon(name, id, str(reply.content), False)
         await ctx.send("Armor added!")
 
+@bot.command()
+async def add_armor(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        await ctx.send("Which character would you like to add this weapon to?")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            if sheet.verify_id(sheet.get_id(reply.content)) is False:
+                await ctx.send("This character could not be found!")
+            else:
+                await insert_into_inventory(ctx, id, reply.content, 1)
+                await add_armor_to_sheet(ctx, id, name, reply.content)
+
+@bot.command()
+async def equip_armor(ctx, name):
+    id = inventory.find_item_id(name)
+    id = sheet.clean_up(str(id)).replace(",", "")
+    if id is None:
+        await ctx.send("Item could not be found!")
+    else:
+        await ctx.send("Which character would you like to equip this weapon to?")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            if sheet.verify_id(sheet.get_id(reply.content)) is False:
+                await ctx.send("This character could not be found!")
+            else:
+                inventory.equip_weapon(id, sheet.get_id(reply.content), False)
+                await ctx.send("Equipped!")
+                
 async def add_weapon_to_sheet(ctx, id, name, char):
-    atk = inventory.find_atk(id)
+    atk = inventory.find_atk(id, True)
     atk = int(sheet.clean_up(str(atk)).replace(",", ""))
-    inventory.add_weapon_to_sheet(name, id, sheet.get_id(char), atk)
+    inventory.add_weapon_to_sheet(name, id, sheet.get_id(char), atk, True)
     await ctx.send("Weapon added to inventory!")
+
+async def add_armor_to_sheet(ctx, id, name, char):
+    atk = inventory.find_atk(id, False)
+    atk = int(sheet.clean_up(str(atk)).replace(",", ""))
+    inventory.add_weapon_to_sheet(name, id, sheet.get_id(char), atk, False)
+    await ctx.send("Armor added to inventory!")
     
 async def promptMultiple(ctx, id, name):
     max = select.select_secondary(sheet.get_id(name))[12]
