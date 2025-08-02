@@ -59,7 +59,6 @@ class Sheet:
         mysql_insert_row_query = ("INSERT INTO reputation (government, resistance, fbl, " +
         "peace_corps) VALUES (DEFAULT, DEFAULT, DEFAULT, DEFAULT)")
         self.connect(mysql_insert_row_query, 0, True, False)
-        return
 
     def get_id(self, name):
         '''This function retrieves the ID of a character based on its name.'''
@@ -307,9 +306,8 @@ class Sheet:
     def verify_id(self, char_id):
         '''This function searches for if a given character exists in the database, and returns
         false if the id doesn't exist.'''
-        mysql_insert_row_query = ("SELECT 1 FROM characteristics WHERE char_id = " + char_id)
+        mysql_insert_row_query = "SELECT 1 FROM characteristics WHERE char_id = " + char_id
         self.connect(mysql_insert_row_query, 0, False, False)
         if self.data is None:
             return False
         return True
-    

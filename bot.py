@@ -346,7 +346,7 @@ async def drop_item(ctx, char, name):
     elif inventory.find_item_in_char(name, sheet.get_id(char)) is None:
         await ctx.send("This item could not be found in the character's inventory!")
     else:
-        inventory.remove_item(sheet.get_id(char))
+        inventory.remove_item(name, sheet.get_id(char))
         if flavor is not None:
             await ctx.send(char + ' ' + sheet.clean_up(str(flavor)).replace(',', '').strip('"'))
         else:
@@ -597,7 +597,7 @@ async def prompt_multiple(ctx, item_id, name):
     add to the inventory.'''
     # finds the maximum amount of items a character can hold
     max_item = select.select_secondary(sheet.get_id(name))[12]
-    max_item = int(sheet.clean_up(str(max_item)).replace(",", "")) 
+    max_item = int(sheet.clean_up(str(max_item)).replace(",", ""))
     inv = int(sheet.clean_up(str(inventory.find_inv_count(sheet.get_id(name)))).replace(",", ""))
     await ctx.send("How many of this item should be added?")
     def check(m):
@@ -607,7 +607,7 @@ async def prompt_multiple(ctx, item_id, name):
     except asyncio.TimeoutError:
         await ctx.send('Timeout occurred')
     else:
-        if error.verifyNumeric(reply.content) is False:
+        if error.verify_numeric(reply.content) is False:
             await ctx.send("Invalid input!")
         # if the number requested is larger than the maximum, it can't be added
         elif max_item < inv + int(reply.content):
