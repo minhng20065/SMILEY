@@ -56,7 +56,7 @@ async def register(ctx, *args):
         await ctx.send("Error, invalid status input.")
         return
     # if the age is not a numerical value, it is invalid.
-    if error.verifyNumeric(args[1]):
+    if error.verify_numeric(args[1]):
         sheet.register_char(args)
     else:
         await ctx.send("Error, invalid age input.")
@@ -75,20 +75,40 @@ async def get_id(ctx, name):
 async def primary(ctx, *args):
     '''This method registers the primary stats for a character. It takes
     the primary stat values and passes them on to an SQL function in the sheet.py file'''
-    if len(args) != 7:
+    if len(args) != 6:
         await ctx.send('Invalid amount of arguments! Try again.')
-    if sheet.verify_id(args[6]) is False:
-        await ctx.send("This character is not registered!")
-    for i in range(0, 7):
-        if error.verifyNumeric(args[i]) is False:
+        return
+    for i in range(0, 6):
+        if error.verify_numeric(args[i]) is False:
             await ctx.send("One of your arguments is invalid! Please try again.")
             return
-    sheet.register_prim(args)
+    await ctx.send("What character should these stats be assigned to?")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        char_id = sheet.get_id(reply.content)
+        if sheet.verify_id(char_id) is False:
+            await ctx.send("Character not found!")
+        else:
+            await primary_char(ctx, args, char_id)
+
+
+async def primary_char(ctx, args, char_id):
+    '''This function recieves the character id of a character and their inputted
+    primary stats, insering those stats into the database.'''
+    new_args = args + (char_id,)
+    sheet.register_prim(new_args)
     await ctx.send("stored! Secondary stats have been calculated.")
+
 @bot.command()
-async def levelup(ctx, char_id):
+async def levelup(ctx, name):
     '''This function levels up a character given their id. It prompts the user to increment
     a primary stat by one, and executes a function that does that in the sheet file.'''
+    char_id = sheet.get_id(name)
     if sheet.verify_id(char_id) is False:
         await ctx.send("This character is not registered!")
         return
@@ -108,9 +128,10 @@ async def levelup(ctx, char_id):
         else:
             await ctx.send("Upgrade Successful!")
 @bot.command()
-async def editcharacter(ctx, char_id):
+async def editcharacter(ctx, name):
     '''Prompts the user to edit the character values of a given character, and calls another
     function to ask for value.'''
+    char_id = sheet.get_id(name)
     if sheet.verify_id(char_id) is False:
         await ctx.send("This character is not registered!")
         return
@@ -174,34 +195,36 @@ async def edit_primary_val(ctx, char_id, column):
             await ctx.send("Sucessfully edited the character's " + column)
 
 @bot.command()
-async def print_sheet(ctx, char_id):
+async def print_sheet(ctx, name):
     """"This method prints out the character sheet by calling print functions from the sheet file.
     It takes the character id corresponding to the sheet."""
+    char_id = sheet.get_id(name)
     if sheet.verify_id(char_id) is False:
         await ctx.send("This character is not registered!")
         return
     await ctx.send("```" + select.print_char(char_id) + "\n\nPRIMARY STATS:\n"
                    + select.print_prim(char_id) +
                    "\n\nSECONDARY STATS:\n" + select.print_sec(char_id) + "\n\nABILITIES:\n" 
-                   + str(select.calculate_abilities(char_id)) + "\n\nCURRENT WEAPON:\n"
+                   + str(select.calculate_abilities(char_id)[0]) + "\n\nCURRENT WEAPON:\n"
                    + "\n\nCURRENT ARMOR:\n" +
                    "\n\nEQUIPPED ABILITY:\n" + str(select.print_ability(char_id)) 
                    + "\n\nREPUTATION:\n" + str(select.print_rep(char_id)) +  "\n\nSLOE:\n" +  "```")
 
 @bot.command()
-async def assign_ability(ctx, char_id):
+async def assign_ability(ctx, name):
     """This function displays the available abilities that a character can
     equip, and prompts user if they want to equip an ability for each slot.. It then passes the 
     reply to a function that prompts the user to assign an ability for each slot."""
+    char_id = sheet.get_id(name)
     if sheet.verify_id(char_id) is False:
         await ctx.send("This character is not registered!")
         return
     slots = sheet.calculate_slots(char_id)
     await ctx.send("These are your available abilities!\n" +
-                   str(select.calculate_abilities(char_id)))
+                   str(select.calculate_abilities(char_id)[0]))
     await ctx.send("Your available slots: " + str(slots))
     def check(m):
-        return m.author == ctx.author and m.channel == ctx.channel\
+        return m.author == ctx.author and m.channel == ctx.channel
     # iterates through each available slot for the character
     while slots != 0:
         await ctx.send("Would you like to assign an ability for slot " + str(slots) +
@@ -212,7 +235,7 @@ async def assign_ability(ctx, char_id):
             await ctx.send('Timeout occurred')
         else:
             if str(reply.content) == "Y":
-                await assign(ctx, slots, char_id)
+                await assign(ctx, slots, char_id, select.calculate_abilities(char_id)[1])
                 slots = slots - 1
             elif str(reply.content) == "N":
                 break
@@ -230,10 +253,11 @@ async def edit_rep(ctx, col, row, char_id):
     await ctx.send("Reputation updated!")
 
 @bot.command()
-async def delete_sheet(ctx, char_id):
+async def delete_sheet(ctx, name):
     """This method prompts the user to delete a sheet based on the character ID provided.
     It then executes a method in the sheet file that deletes all the character's information
     from the database."""
+    char_id = sheet.get_id(name)
     if sheet.verify_id(char_id) is False:
         await ctx.send("This character is not registered!")
         return
@@ -631,7 +655,7 @@ async def insert_into_inventory(ctx, item_id, name, items):
         else:
             await ctx.send(name + "added this item to their inventory.")
 
-async def assign(ctx, slot, char_id):
+async def assign(ctx, slot, char_id, valid):
     """This function prompts the user to assign an ability for their character, for
     each slot. It then calls a function from the sheet file to put it in the database."""
     if sheet.verify_id(char_id) is False:
@@ -645,8 +669,12 @@ async def assign(ctx, slot, char_id):
     except asyncio.TimeoutError:
         await ctx.send('Timeout occurred')
     else:
-        sheet.update_abilities(char_id, slot, reply.content)
-        await ctx.send("Ability assigned!")
+        print(valid)
+        if reply.content in valid:
+            sheet.update_abilities(char_id, slot, reply.content)
+            await ctx.send("Ability assigned!")
+        else:
+            await ctx.send("not a valid ability!")
 
 @bot.event
 async def on_member_join(member):

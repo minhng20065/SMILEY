@@ -13,6 +13,7 @@ class Select:
         tup = self.sheet.data
         val = ""
         desc = ""
+        values = []
         for x in range(len(tup)-1):
             mysql_insert_row_query = " "
             if x == 0:
@@ -37,18 +38,18 @@ class Select:
             val = self.sheet.data
             self.sheet.connect(mysql_insert_row_query2, 0, False, True)
             desc = self.sheet.data
-            print(val)
             temp = int(tup[x])
             if temp % 2 == 0:
                 temp = temp - 1
-            print(temp)
             for y in range(5, temp, 2):
                 abilities = (abilities + self.sheet.clean_up(str(val[((y-3)//2) - 1]).
                                                       replace("'", "").replace(",", "")) +
                                                       " - " + self.sheet.clean_up(str(desc
                                                     [((y-3)//2) - 1]).replace("'", "").
                                                     replace(",", "") + " - " + str(y) + " AMP\n"))
-        return abilities
+                values.append(' '.join(map(str, val[((y-3)//2) - 1])))
+                print(values)
+        return abilities, values
 
     def select_char(self, char_id):
         '''This function selects all the characteristic data for a character given its
