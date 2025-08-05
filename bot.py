@@ -12,6 +12,7 @@ from sheet import Sheet
 from errors import Error
 from select1 import Select
 from inventory import Inventory
+from npcs import NPC
 import config
 
 load_dotenv()
@@ -36,6 +37,7 @@ sheet = Sheet()
 error = Error()
 select = Select()
 inventory = Inventory()
+npc = NPC()
 
 @bot.command()
 async def register(ctx, *args):
@@ -599,6 +601,28 @@ async def add_equip_flavor(ctx, name):
         else:
             inventory.add_text(True, False, str(reply.content), item_id)
             await ctx.send("Added flavor text!")
+@bot.command()
+async def register_npc(ctx, name):
+    npc.register_npcs(name)
+    await ctx.send("npc registered!")
+@bot.command()
+async def add_dialogue(ctx, name):
+    npc_id = npc.get_npc_id(name)
+    npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
+    if npc_id is None:
+        await ctx.send("NPC not found!")
+    else:
+        await ctx.send("Input your text here.")
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send('Timeout occurred')
+        else:
+            npc.add_dialogue(reply.content, npc_id)
+            await ctx.send('Dialogue added!')
+
 
 async def add_weapon_to_sheet(ctx, item_id, name, char):
     '''This method adds an equippable weapon to the database, taking
