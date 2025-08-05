@@ -632,6 +632,16 @@ async def talk_to(ctx, name):
     else:
         await ctx.send(name.upper() + ": " + sheet.clean_up(str(npc.talk_to(npc_id))).replace(",", ""))
 
+@bot.command()
+async def remove_npc(ctx, name):
+    npc_id = npc.get_npc_id(name)
+    npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
+    if npc_id is None:
+        await ctx.send("NPC not found!")
+    else:
+        npc.remove_npc(npc_id)
+        await ctx.send("NPC removed!")
+
 async def add_weapon_to_sheet(ctx, item_id, name, char):
     '''This method adds an equippable weapon to the database, taking
     in the weapon's id, name, and the character id.'''

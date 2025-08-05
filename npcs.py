@@ -43,3 +43,10 @@ class NPC:
         mysql_insert_row_query = f"SELECT dialogue FROM dialogue WHERE npc_id = '{npc_id}'"
         self.connect(mysql_insert_row_query, 0, False, False)
         return self.data
+    def remove_npc(self, npc_id):
+        mysql_insert_row_query = "DELETE FROM npc WHERE npc_id = %s"
+        mysql_insert_row_values = (npc_id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = "DELETE FROM dialogue WHERE npc_id = %s"
+        mysql_insert_row_values = (npc_id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
