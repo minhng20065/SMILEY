@@ -623,6 +623,14 @@ async def add_dialogue(ctx, name):
             npc.add_dialogue(reply.content, npc_id)
             await ctx.send('Dialogue added!')
 
+@bot.command()
+async def talk_to(ctx, name):
+    npc_id = npc.get_npc_id(name)
+    npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
+    if npc_id is None:
+        await ctx.send("NPC not found!")
+    else:
+        await ctx.send(name.upper() + ": " + sheet.clean_up(str(npc.talk_to(npc_id))).replace(",", ""))
 
 async def add_weapon_to_sheet(ctx, item_id, name, char):
     '''This method adds an equippable weapon to the database, taking

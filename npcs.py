@@ -39,3 +39,7 @@ class NPC:
         mysql_insert_row_query =  "INSERT INTO dialogue (dialogue, npc_id) VALUES (%s, %s)"
         mysql_insert_row_values = (dialogue, npc_id)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+    def talk_to(self, npc_id):
+        mysql_insert_row_query = f"SELECT dialogue FROM dialogue WHERE npc_id = '{npc_id}'"
+        self.connect(mysql_insert_row_query, 0, False, False)
+        return self.data
