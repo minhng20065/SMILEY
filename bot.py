@@ -603,10 +603,13 @@ async def add_equip_flavor(ctx, name):
             await ctx.send("Added flavor text!")
 @bot.command()
 async def register_npc(ctx, name):
+    '''This method adds a new npc to the database, taking in the npc's name.'''
     npc.register_npcs(name, False)
     await ctx.send("npc registered!")
 @bot.command()
 async def add_dialogue(ctx, name):
+    '''This function adds npc dialogue to the database. It takes in the npc's name,
+    and prompts the user to input in the text.'''
     npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     if npc_id is None:
@@ -625,15 +628,19 @@ async def add_dialogue(ctx, name):
 
 @bot.command()
 async def talk_to(ctx, name):
+    '''This method lets characters talk to npcs, outputting their dialogue.
+    It takes in the npc's name.'''
     npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     if npc_id is None:
         await ctx.send("NPC not found!")
     else:
-        await ctx.send(name.upper() + ": " + sheet.clean_up(str(npc.talk_to(npc_id))).replace(",", ""))
+        await ctx.send(name.upper() + ": " +
+                       sheet.clean_up(str(npc.talk_to(npc_id))).replace(",", ""))
 
 @bot.command()
 async def remove_npc(ctx, name):
+    '''This method removes a npc from the database, taking in the npc's name.'''
     npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     if npc_id is None:
@@ -644,11 +651,14 @@ async def remove_npc(ctx, name):
 
 @bot.command()
 async def register_enemy(ctx, name):
+    '''This method registers a new enemy to the database, taking in the enemy's name.'''
     npc.register_npcs(name, True)
     await ctx.send("enemy registered!")
 
 @bot.command()
 async def register_enemy_stats(ctx, *args):
+    '''This method registers the enemy's stats, taking in all the stats and prompting
+    the user for the enemy's name.'''
     if len(args) != 4:
         await ctx.send('Invalid amount of arguments! Try again.')
         return
@@ -673,6 +683,7 @@ async def register_enemy_stats(ctx, *args):
             await ctx.send("Stats added!")
 @bot.command()
 async def remove_enemy(ctx, name):
+    '''This method removes an enemy from the database, taking in the name of the enemy.'''
     npc_id = npc.get_npc_id(name, True)
     if npc_id is None:
         await ctx.send("NPC not found!")
