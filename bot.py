@@ -603,11 +603,11 @@ async def add_equip_flavor(ctx, name):
             await ctx.send("Added flavor text!")
 @bot.command()
 async def register_npc(ctx, name):
-    npc.register_npcs(name)
+    npc.register_npcs(name, False)
     await ctx.send("npc registered!")
 @bot.command()
 async def add_dialogue(ctx, name):
-    npc_id = npc.get_npc_id(name)
+    npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     if npc_id is None:
         await ctx.send("NPC not found!")
@@ -625,7 +625,7 @@ async def add_dialogue(ctx, name):
 
 @bot.command()
 async def talk_to(ctx, name):
-    npc_id = npc.get_npc_id(name)
+    npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     if npc_id is None:
         await ctx.send("NPC not found!")
@@ -634,12 +634,51 @@ async def talk_to(ctx, name):
 
 @bot.command()
 async def remove_npc(ctx, name):
-    npc_id = npc.get_npc_id(name)
+    npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     if npc_id is None:
         await ctx.send("NPC not found!")
     else:
-        npc.remove_npc(npc_id)
+        npc.remove_npc(npc_id, False)
+        await ctx.send("NPC removed!")
+
+@bot.command()
+async def register_enemy(ctx, name):
+    npc.register_npcs(name, True)
+    await ctx.send("enemy registered!")
+
+@bot.command()
+async def register_enemy_stats(ctx, *args):
+    if len(args) != 4:
+        await ctx.send('Invalid amount of arguments! Try again.')
+        return
+    for i in range(0, 4):
+        if error.verify_numeric(args[i]) is False:
+            await ctx.send("One of your arguments is invalid! Please try again.")
+            return
+    await ctx.send("What enemy should these stats be assigned to?")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        npc_id = npc.get_npc_id(reply.content, True)
+        if npc_id is None:
+            await ctx.send("Character not found!")
+        else:
+            npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
+            npc.add_stats(args, npc_id)
+            await ctx.send("Stats added!")
+@bot.command()
+async def remove_enemy(ctx, name):
+    npc_id = npc.get_npc_id(name, True)
+    if npc_id is None:
+        await ctx.send("NPC not found!")
+    else:
+        npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
+        npc.remove_npc(npc_id, True)
         await ctx.send("NPC removed!")
 
 async def add_weapon_to_sheet(ctx, item_id, name, char):
