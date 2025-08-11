@@ -13,7 +13,10 @@ from errors import Error
 from select1 import Select
 from inventory import Inventory
 from npcs import NPC
+from grid import Grid
 import config
+
+
 
 load_dotenv()
 # enables all intents for the bot
@@ -38,6 +41,7 @@ error = Error()
 select = Select()
 inventory = Inventory()
 npc = NPC()
+grid = Grid(7, 10)
 
 @bot.command()
 async def register(ctx, *args):
@@ -691,6 +695,20 @@ async def remove_enemy(ctx, name):
         npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
         npc.remove_npc(npc_id, True)
         await ctx.send("NPC removed!")
+
+@bot.command()
+async def adjustGrid(ctx, row, col):
+    if error.verify_numeric:
+        grid.adjust_size(int(row), int(col))
+    else:
+        await ctx.send("Inputs are invalid!")
+        return
+    await ctx.send("dimensions changed!")
+
+@bot.command()
+async def fight(ctx):
+    print(grid.row)
+    await ctx.send("```" + grid.generate_grid() + "```")
 
 async def add_weapon_to_sheet(ctx, item_id, name, char):
     '''This method adds an equippable weapon to the database, taking
