@@ -706,9 +706,18 @@ async def adjustGrid(ctx, row, col):
     await ctx.send("dimensions changed!")
 
 @bot.command()
-async def fight(ctx):
-    print(grid.row)
-    await ctx.send("```" + grid.generate_grid() + "```")
+async def fight(ctx, player, name):
+    npc_id = npc.get_npc_id(name, True)
+    char_id = sheet.get_id(player)
+    if npc_id is None:
+        await ctx.send("NPC not found!")
+    elif sheet.verify_id(char_id) is False:
+        await ctx.send("Player not found!")
+    else:
+        enemy = name[0]
+        chara = player[0]
+        await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
+        await ctx.send("KEY: \n" + player + " - " + chara + "\n" + name + " - " + enemy)
 
 async def add_weapon_to_sheet(ctx, item_id, name, char):
     '''This method adds an equippable weapon to the database, taking
