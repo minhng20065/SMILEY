@@ -53,6 +53,11 @@ class NPC:
         mysql_insert_row_query = f"SELECT npc_id FROM npc WHERE Name = '{name}'"
         self.connect(mysql_insert_row_query, 0, False, False)
         return self.data
+    
+    def get_enemy_stats(self, id):
+        mysql_insert_row_query = "SELECT * FROM enemy_stats WHERE npc_id = " + id
+        self.connect(mysql_insert_row_query, 0, False, False)
+        return self.data
 
     def add_stats(self, args, npc_id):
         '''This function adds stats to an enemy, taking in the stats and the id of 

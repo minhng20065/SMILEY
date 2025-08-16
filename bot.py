@@ -689,6 +689,7 @@ async def register_enemy_stats(ctx, *args):
 async def remove_enemy(ctx, name):
     '''This method removes an enemy from the database, taking in the name of the enemy.'''
     npc_id = npc.get_npc_id(name, True)
+    npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     if npc_id is None:
         await ctx.send("NPC not found!")
     else:
@@ -708,7 +709,11 @@ async def adjustGrid(ctx, row, col):
 @bot.command()
 async def fight(ctx, player, name):
     npc_id = npc.get_npc_id(name, True)
+    npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     char_id = sheet.get_id(player)
+    char_id = sheet.clean_up(str(char_id)).replace(",", "")
+    mov = select.select_secondary(char_id)[8]
+    mov = sheet.clean_up(str(mov)).replace(",", "")
     if npc_id is None:
         await ctx.send("NPC not found!")
     elif sheet.verify_id(char_id) is False:
@@ -716,8 +721,55 @@ async def fight(ctx, player, name):
     else:
         enemy = name[0]
         chara = player[0]
+        grid.random_pos()
         await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
         await ctx.send("KEY: \n" + player + " - " + chara + "\n" + name + " - " + enemy)
+        await turn(ctx, player, npc_id, enemy, int(mov))
+
+async def turn(ctx, player, npc_id, enemy, mov):
+    max_mov = mov
+    char_id = sheet.get_id(player)
+    char_id = sheet.clean_up(str(char_id)).replace(",", "")
+    await ctx.send("You have " + str(mov) + " MOV left.")
+    await ctx.send("Which direction do you want to move, and how far? Or press S to end the turn.")
+    await ctx.send("Input both values like this: DirectionNumber(UP(U), DOWN(D), LEFT(L), RIGHT(R)), then Number")
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    try:
+        reply = await bot.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Timeout occurred')
+    else:
+        if reply.content.upper() == 'S':
+            await ctx.send("Turn over.")
+            return
+        if len(reply.content) < 2:
+            await ctx.send("Invalid input format. Please try again (e.g., U3 or D2).")
+            return await turn(ctx, player, npc_id, enemy, mov)
+        direction = reply.content[0].upper()
+        if direction not in ['U', 'D', 'L', 'R']:
+            await ctx.send("Invalid direction. Use U (up), D (down), L (left), or R (right).")
+            return await turn(ctx, player, npc_id, enemy, mov)
+        value = int(reply.content[1:])
+        if value > mov:
+            await ctx.send("Not enough movement!")
+            return await turn(ctx, player, npc_id, enemy, mov)
+        mov = mov - value + grid.move(direction, value)
+        enemy = enemy[0]
+        chara = player[0]
+        await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
+        await enemy_turn(ctx, player, npc_id, enemy, max_mov)
+
+async def enemy_turn(ctx, player, npc_id, enemy, player_mov):
+    mov = npc.get_enemy_stats(npc_id)[3]
+    mov = int(sheet.clean_up(str(mov)).replace(",", ""))
+    grid.enemy_mov(mov)
+    enemy = enemy[0]
+    chara = player[0]
+    await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
+    await turn(ctx, player, npc_id, enemy, player_mov)
+
+
 
 async def add_weapon_to_sheet(ctx, item_id, name, char):
     '''This method adds an equippable weapon to the database, taking
