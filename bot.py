@@ -742,7 +742,7 @@ async def turn(ctx, player, npc_id, enemy, mov):
     else:
         if reply.content.upper() == 'S':
             await ctx.send("Turn over.")
-            return
+            return await enemy_turn(ctx, player, npc_id, enemy, max_mov)
         if len(reply.content) < 2:
             await ctx.send("Invalid input format. Please try again (e.g., U3 or D2).")
             return await turn(ctx, player, npc_id, enemy, mov)
@@ -758,12 +758,12 @@ async def turn(ctx, player, npc_id, enemy, mov):
         enemy = enemy[0]
         chara = player[0]
         await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
-        await enemy_turn(ctx, player, npc_id, enemy, max_mov)
+        return await turn(ctx, player, npc_id, enemy, mov)
 
 async def enemy_turn(ctx, player, npc_id, enemy, player_mov):
     mov = npc.get_enemy_stats(npc_id)[3]
     mov = int(sheet.clean_up(str(mov)).replace(",", ""))
-    grid.enemy_mov(mov)
+    grid.a_star(mov)
     enemy = enemy[0]
     chara = player[0]
     await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")

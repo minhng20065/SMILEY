@@ -12,6 +12,73 @@ class Grid:
     def __init__(self, row, col):
         self.row = row
         self.col = col
+        self.parent_i = 0
+        self.parent_j = 0
+        self.f = float('inf')
+        self.g = float('inf')
+        self.h = 0
+    
+    
+    def is_destination(self, x, y):
+        return x == self.pl_pos_x and y == self.pl_pos_y
+    
+    def calc_heur(self, x, y,):
+        return ((x - self.pl_pos_x) ** 2 + (y - self.pl_pos_y) ** 2) ** 0.5
+    
+    def a_star(self, mov):
+        if self.is_destination(self.en_pos_x, self.en_pos_y):
+            print("already there!")
+            return
+        closed_list = [[False for _ in range(self.col)] for _ in range(self.row)]
+        cell_details = [[Grid(self.row, self.col) for _ in range(self.col)] for _ in range(self.row)]
+        i = self.en_pos_x
+        j = self.en_pos_y
+        cell_details[i][j].f = 0
+        cell_details[i][j].g = 0
+        cell_details[i][j].h = 0
+        cell_details[i][j].parent_i = i
+        cell_details[i][j].parent_j = j
+        print("sex")
+        open_list = []
+        heapq.heappush(open_list, (0.0, i, j))
+        found_dest = False
+
+        while (mov > 0):
+            p = heapq.heappop(open_list)
+            i = p[1]
+            j = p[2]
+            closed_list[i][j] = True
+
+            directions = [[(0, 1), (0, -1), (1, 0), (-1, 0),
+                      (1, 1), (1, -1), (-1, 1), (-1, -1)]]
+            for dir in directions:
+                new_i = i + dir[0]
+                new_j = j + dir[1]
+                if not closed_list[new_i][new_j]:
+                    if self.is_destination(new_i, new_j):
+                        cell_details[new_i][new_j].parent_i = i
+                        cell_details[new_i][new_j].parent_j = j
+                        self.en_pos_x = i
+                        self.en_pos_y = j
+                        print("destination found!")
+                        return
+                    else:
+                        g_new = cell_details[i][j].g + 1.0
+                        h_new = self.calc_heur(new_i, new_j)
+                        f_new = g_new + h_new
+                        if cell_details[new_i][new_j].f == float('inf') or cell_details[new_i][new_j].f > f_new:
+                            heapq.heappush(open_list, (f_new, new_i, new_j))
+                            cell_details[new_i][new_j].f = f_new
+                            cell_details[new_i][new_j].g = g_new
+                            cell_details[new_i][new_j].h = h_new
+                            cell_details[new_i][new_j].parent_i = i
+                            cell_details[new_i][new_j].parent_j = j
+            mov = mov - 1
+        if not found_dest:
+            print("failed to find the destination cell")
+            self.en_pos_x = i
+            self.en_pos_y = j
+
 
     def generate_grid(self, player, enemy):
         grid = ""
@@ -70,5 +137,3 @@ class Grid:
                 self.pl_pos_x = self.col - 1
                 print(diff)
             return diff
-    def enemy_mov(self, mov):
-        self.en_pos_x  = self.en_pos_x - mov
