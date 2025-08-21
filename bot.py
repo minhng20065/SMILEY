@@ -41,7 +41,7 @@ error = Error()
 select = Select()
 inventory = Inventory()
 npc = NPC()
-grid = Grid(7, 10)
+grid = Grid()
 
 @bot.command()
 async def register(ctx, *args):
@@ -727,7 +727,6 @@ async def fight(ctx, player, name):
         await turn(ctx, player, npc_id, enemy, int(mov))
 
 async def turn(ctx, player, npc_id, enemy, mov):
-    max_mov = mov
     char_id = sheet.get_id(player)
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
     await ctx.send("You have " + str(mov) + " MOV left.")
@@ -742,11 +741,12 @@ async def turn(ctx, player, npc_id, enemy, mov):
     else:
         if reply.content.upper() == 'S':
             await ctx.send("Turn over.")
-            return await enemy_turn(ctx, player, npc_id, enemy, max_mov)
+            return await enemy_turn(ctx, player, npc_id, enemy)
         if len(reply.content) < 2:
             await ctx.send("Invalid input format. Please try again (e.g., U3 or D2).")
             return await turn(ctx, player, npc_id, enemy, mov)
         direction = reply.content[0].upper()
+        print(direction)
         if direction not in ['U', 'D', 'L', 'R']:
             await ctx.send("Invalid direction. Use U (up), D (down), L (left), or R (right).")
             return await turn(ctx, player, npc_id, enemy, mov)
@@ -754,20 +754,27 @@ async def turn(ctx, player, npc_id, enemy, mov):
         if value > mov:
             await ctx.send("Not enough movement!")
             return await turn(ctx, player, npc_id, enemy, mov)
+        print("balls")
         mov = mov - value + grid.move(direction, value)
+        print("balls")
         enemy = enemy[0]
         chara = player[0]
+        print("balls")
         await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
         return await turn(ctx, player, npc_id, enemy, mov)
 
-async def enemy_turn(ctx, player, npc_id, enemy, player_mov):
+async def enemy_turn(ctx, player, npc_id, enemy):
+    char_id = sheet.get_id(player)
+    char_id = sheet.clean_up(str(char_id)).replace(",", "")
+    player_mov = select.select_secondary(char_id)[8]
+    player_mov = sheet.clean_up(str(player_mov)).replace(",", "")
     mov = npc.get_enemy_stats(npc_id)[3]
     mov = int(sheet.clean_up(str(mov)).replace(",", ""))
     grid.a_star(mov)
     enemy = enemy[0]
     chara = player[0]
     await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
-    await turn(ctx, player, npc_id, enemy, player_mov)
+    await turn(ctx, player, npc_id, enemy, int(player_mov))
 
 
 
