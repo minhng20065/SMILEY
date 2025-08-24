@@ -122,7 +122,16 @@ class Grid:
         if not found_dest:
             print("failed to find the destination cell")
 
-
+    def range(self):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        for dir in directions:
+            print(dir)
+            print("sex")
+            new_x = self.pl_pos_x + dir[0]
+            new_y = self.pl_pos_y + dir[1]
+            if (new_x == self.en_pos_x and new_y == self.en_pos_y):
+                return True
+        return False
     def generate_grid(self, player, enemy):
         grid = ""
         for i in range(self.row):

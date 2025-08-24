@@ -63,9 +63,14 @@ class NPC:
         '''This function adds stats to an enemy, taking in the stats and the id of 
         the enemy.'''
         mysql_insert_row_query = ("UPDATE enemy_stats SET HP = %s, DAM = %s, PRO = %s, " +
-        "MOV = %s WHERE npc_id = %s")
-        mysql_insert_row_values = (int(args[0]), int(args[1]), int(args[2]), int(args[3]),
+        "MOV = %s, max_hp = %s WHERE npc_id = %s")
+        mysql_insert_row_values = (int(args[0]), int(args[1]), int(args[2]), int(args[3]), int(args[0]),
                                    int(npc_id))
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+    
+    def sim_dam(self, hp, npc_id):
+        mysql_insert_row_query = ("UPDATE enemy_stats SET HP = %s WHERE npc_id = %s")
+        mysql_insert_row_values = (hp, int(npc_id))
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
     def add_dialogue(self, dialogue, npc_id):

@@ -497,10 +497,11 @@ async def equip_weapon(ctx, name):
     taking in the name of the character.'''
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
-    flavor = inventory.print_text(False, False, True, item_id)
+    print(item_id)
     if item_id is None:
         await ctx.send("Item could not be found!")
     else:
+        flavor = inventory.print_text(False, False, True, int(item_id))
         await ctx.send("Which character would you like to equip this weapon to?")
         def check(m):
             return m.author == ctx.author and m.channel == ctx.channel
@@ -517,7 +518,7 @@ async def equip_weapon(ctx, name):
                     await ctx.send(str(reply.content) + ' ' +
                                    sheet.clean_up(str(flavor)).replace(',', '').strip('"'))
                 else:
-                    ctx.send(str(reply.content) + "equipped the weapon.")
+                    await ctx.send(str(reply.content) + "equipped the weapon.")
 @bot.command()
 async def register_armor(ctx, name):
     '''This function allows a user to register a new armor to the database,
@@ -730,7 +731,7 @@ async def turn(ctx, player, npc_id, enemy, mov):
     char_id = sheet.get_id(player)
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
     await ctx.send("You have " + str(mov) + " MOV left.")
-    await ctx.send("Which direction do you want to move, and how far? Or press S to end the turn.")
+    await ctx.send("Which direction do you want to move, and how far? Or press S to end the turn, or X to attack and end the turn.")
     await ctx.send("Input both values like this: DirectionNumber(UP(U), DOWN(D), LEFT(L), RIGHT(R)), then Number")
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
@@ -742,6 +743,8 @@ async def turn(ctx, player, npc_id, enemy, mov):
         if reply.content.upper() == 'S':
             await ctx.send("Turn over.")
             return await enemy_turn(ctx, player, npc_id, enemy)
+        if reply.content.upper() == 'X':
+            return await attack(ctx, player, npc_id, enemy, mov)
         if len(reply.content) < 2:
             await ctx.send("Invalid input format. Please try again (e.g., U3 or D2).")
             return await turn(ctx, player, npc_id, enemy, mov)
@@ -763,6 +766,25 @@ async def turn(ctx, player, npc_id, enemy, mov):
         await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
         return await turn(ctx, player, npc_id, enemy, mov)
 
+async def attack(ctx, player, npc_id, enemy, mov):
+    char_id = sheet.get_id(player)
+    char_id = sheet.clean_up(str(char_id)).replace(",", "")
+    en_hp = npc.get_enemy_stats(npc_id)[0]
+    en_hp = sheet.clean_up(str(en_hp)).replace(",", "")
+    atk = select.select_secondary(char_id)[6]
+    atk = sheet.clean_up(str(atk)).replace(",", "")
+    en_atk = inventory.find_equipped(char_id, True)
+    en_atk = sheet.clean_up(str(en_atk)).replace(",", "")
+    attack = int(atk) + int(en_atk)
+    if not grid.range():
+        await ctx.send("not in attack range!")
+        await turn(ctx, player, npc_id, enemy, mov)
+    else:
+        en_hp = int(en_hp) - attack
+        await ctx.send(f"Attacked enemy for {attack} damage!")
+        npc.sim_dam(en_hp, npc_id)
+        return await enemy_turn(ctx, player, npc_id, enemy)
+
 async def enemy_turn(ctx, player, npc_id, enemy):
     char_id = sheet.get_id(player)
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
@@ -775,7 +797,6 @@ async def enemy_turn(ctx, player, npc_id, enemy):
     chara = player[0]
     await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
     await turn(ctx, player, npc_id, enemy, int(player_mov))
-
 
 
 async def add_weapon_to_sheet(ctx, item_id, name, char):
