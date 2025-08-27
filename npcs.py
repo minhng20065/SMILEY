@@ -42,6 +42,7 @@ class NPC:
         else:
             mysql_insert_row_query = "INSERT INTO npc (Name) VALUES (%s)"
             mysql_insert_row_values = (name,)
+            self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
     def get_npc_id(self, name, enemy):
         '''This function gets the id of an npc, taking in the npc's name,
@@ -53,6 +54,21 @@ class NPC:
         mysql_insert_row_query = f"SELECT npc_id FROM npc WHERE Name = '{name}'"
         self.connect(mysql_insert_row_query, 0, False, False)
         return self.data
+
+    def verify_npc(self, npc_id, enemy):
+        '''This method verifies if npcs exist in the database, taking in the id
+        of the npc and whether or not it is an enemy.'''
+        if enemy:
+            mysql_insert_row_query = "SELECT 1 FROM enemies WHERE npc_id = " + npc_id
+            self.connect(mysql_insert_row_query, 0, False, False)
+            if self.data is None:
+                return False
+            return True
+        mysql_insert_row_query = "SELECT 1 FROM npc WHERE npc_id = " + npc_id
+        self.connect(mysql_insert_row_query, 0, False, False)
+        if self.data is None:
+            return False
+        return True
 
     def get_enemy_stats(self, npc_id):
         '''This method gets the enemy stats from the database, given the enemy's id.'''

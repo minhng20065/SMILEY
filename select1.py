@@ -77,12 +77,6 @@ class Select:
         "ability_slots WHERE char_id = " + char_id)
         self.sheet.connect(mysql_insert_row_query, 0, False, False)
 
-    def select_rep(self, char_id):
-        '''This function selects all the reputation slots for a character given its 
-        character id.'''
-        mysql_insert_row_query = "SELECT * FROM reputation WHERE char_id = " + char_id
-        self.sheet.connect(mysql_insert_row_query, 0, False, False)
-
     def print_char(self, char_id):
         '''This function prints the characteristic data by retrieving
         it from the database and returning a string representation of the
@@ -127,39 +121,3 @@ class Select:
             if i is not None:
                 ability = ability + str(i)
         return ability
-
-    def print_rep(self, char_id):
-        '''This function prints the reputation data by retrieving
-        it from the database and returning a string representation of the
-        data.'''
-        rep = ""
-        self.select_rep(char_id)
-        tup = self.sheet.data
-        for i in range(0, 4):
-            if i == 0:
-                rep = rep + "Government: "
-                if tup[i] is not None:
-                    rep = rep + str(tup[i]) + "\n"
-                else:
-                    rep = rep + "\n"
-                return rep
-            if i == 1:
-                rep = rep + "Resistance: "
-                if tup[i] is not None:
-                    rep = rep + str(tup[i]) + "\n"
-                else:
-                    rep = rep + "\n"
-                return rep
-            if i == 2:
-                rep = rep + "Free Blackthorn League: "
-                if tup[i] is not None:
-                    rep = rep + str(tup[i]) + "\n"
-                else:
-                    rep = rep + "\n"
-                return rep
-            rep = rep + "Peace Corps: "
-            if tup[i] is not None:
-                rep = rep + str(tup[i]) + "\n"
-            else:
-                rep = rep + "\n"
-            return rep

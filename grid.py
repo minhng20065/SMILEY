@@ -22,7 +22,7 @@ class Grid:
     def is_valid(self, row, col):
         '''This method checks if the position of either the player or the enemy
         is valid.'''
-        return 0 <= row < self.row and 0 <= col < self.col
+        return 0 <= col < self.row and 0 <= row < self.col
     def is_destination(self, x, y):
         '''This method checks if the enemy position has reached the 
         player position.'''

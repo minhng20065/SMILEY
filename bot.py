@@ -168,8 +168,9 @@ async def edit_char_val(ctx, char_id, column):
         else:
             await ctx.send("Sucessfully edited the character's " + column)
 @bot.command()
-async def edit_primary(ctx, char_id):
+async def edit_primary(ctx, name):
     """This method prompts the user to choose a primary stat to change from a character's ID."""
+    char_id = sheet.get_id(name)
     if sheet.verify_id(char_id) is False:
         await ctx.send("This character is not registered!")
         return
@@ -214,7 +215,7 @@ async def print_sheet(ctx, name):
                    + str(select.calculate_abilities(char_id)[0]) + "\n\nCURRENT WEAPON:\n"
                    + "\n\nCURRENT ARMOR:\n" +
                    "\n\nEQUIPPED ABILITY:\n" + str(select.print_ability(char_id)) 
-                   + "\n\nREPUTATION:\n" + str(select.print_rep(char_id)) +  "\n\nSLOE:\n" +  "```")
+                   + "\n\nCURRENCY:\n" +  "```")
 
 @bot.command()
 async def assign_ability(ctx, name):
@@ -249,16 +250,6 @@ async def assign_ability(ctx, name):
                 await ctx.send("Invalid answer, please try again.")
 
 @bot.command()
-async def edit_rep(ctx, col, row, char_id):
-    """This method updates the reputation of a character, by passing their character id into
-    a function in the sheet file that updates the database."""
-    if sheet.verify_id(char_id) is False:
-        await ctx.send("This character is not registered!")
-        return
-    sheet.find_rep(col, row, char_id)
-    await ctx.send("Reputation updated!")
-
-@bot.command()
 async def delete_sheet(ctx, name):
     """This method prompts the user to delete a sheet based on the character ID provided.
     It then executes a method in the sheet file that deletes all the character's information
@@ -268,7 +259,7 @@ async def delete_sheet(ctx, name):
         await ctx.send("This character is not registered!")
         return
     await ctx.send("Are you sure you want to delete this sheet?")
-    print_sheet(ctx, char_id)
+    await print_sheet(ctx, char_id)
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
     try:
@@ -309,6 +300,8 @@ async def add_to_inventory(ctx, name):
     function to find how many of that item to add to.'''
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
     await ctx.send("Which character would you like to add this item to?")
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
@@ -320,7 +313,7 @@ async def add_to_inventory(ctx, name):
         if sheet.verify_id(sheet.get_id(reply.content)) is False:
             await ctx.send("This character could not be found!")
         else:
-            await prompt_multiple(ctx, id, reply.content)
+            await prompt_multiple(ctx, item_id, reply.content)
 
 @bot.command()
 async def show_inv(ctx):
@@ -348,10 +341,10 @@ async def use_item(ctx, char, name):
     '''This method allows a character to use an item, taking in the item
     and the character using it.'''
     item_id = inventory.find_item_id(name)
-    item_id = sheet.clean_up(str(id)).replace(",", "")
-    flavor = inventory.print_text(True, False, False, id)
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    item_id = sheet.clean_up(str(item_id)).replace(",", "")
+    flavor = inventory.print_text(True, False, False, item_id)
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
     elif sheet.verify_id(sheet.get_id(char)) is False:
         await ctx.send("This character could not be found!")
     elif inventory.find_item_in_char(name, sheet.get_id(char)) is None:
@@ -360,17 +353,17 @@ async def use_item(ctx, char, name):
         if flavor is not None:
             await ctx.send(char + " " + sheet.clean_up(str(flavor)).replace(',', '').strip('"'))
         else:
-            await ctx.send(char + "used the item.")
+            await ctx.send(char + " used the item.")
 
 @bot.command()
 async def drop_item(ctx, char, name):
     '''This method allows a character to drop an item, taking in the item
     and the character using it.'''
     item_id = inventory.find_item_id(name)
-    item_id = sheet.clean_up(str(id)).replace(",", "")
-    flavor = inventory.print_text(False, True, False, id)
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    item_id = sheet.clean_up(str(item_id)).replace(",", "")
+    flavor = inventory.print_text(False, True, False, item_id)
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
     elif sheet.verify_id(sheet.get_id(char)) is False:
         await ctx.send("This character could not be found!")
     elif inventory.find_item_in_char(name, sheet.get_id(char)) is None:
@@ -386,9 +379,9 @@ async def drop_item(ctx, char, name):
 async def add_use_flavor(ctx, name):
     '''This method adds flavor text for using an item, taking in the name of the item.'''
     item_id = inventory.find_item_id(name)
-    item_id = sheet.clean_up(str(id)).replace(",", "")
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    item_id = sheet.clean_up(str(item_id)).replace(",", "")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
     else:
         await ctx.send("Please input your flavor text here.")
         def check(m):
@@ -398,16 +391,16 @@ async def add_use_flavor(ctx, name):
         except asyncio.TimeoutError:
             await ctx.send('Timeout occurred')
         else:
-            inventory.add_text(True, False, str(reply.content), id)
+            inventory.add_text(True, False, str(reply.content), item_id)
             await ctx.send("Added flavor text!")
 
 @bot.command()
 async def add_drop_flavor(ctx, name):
     '''This method adds flavor text for dropping an item, taking in the name of the item.'''
     item_id = inventory.find_item_id(name)
-    item_id = sheet.clean_up(str(id)).replace(",", "")
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    item_id = sheet.clean_up(str(item_id)).replace(",", "")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
     else:
         await ctx.send("Please input your text here.")
         def check(m):
@@ -417,7 +410,7 @@ async def add_drop_flavor(ctx, name):
         except asyncio.TimeoutError:
             await ctx.send('Timeout occurred')
         else:
-            inventory.add_text(False, True, str(reply.content), id)
+            inventory.add_text(False, True, str(reply.content), item_id)
             await ctx.send("Added flavor text!")
 
 @bot.command()
@@ -425,8 +418,8 @@ async def add_equippable_flavor(ctx, name):
     '''This method adds flavor text for equipping an item, taking in the name of the item.'''
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
     else:
         await ctx.send("Please input your text here.")
         def check(m):
@@ -444,10 +437,10 @@ async def remove_item(ctx, name):
     taking in the name of the item.'''
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
     else:
-        inventory.remove_all_item(id)
+        inventory.remove_all_item(item_id)
         await ctx.send("Item removed!")
 
 @bot.command()
@@ -474,8 +467,11 @@ async def add_weapon(ctx, name):
     taking in the name of the character.'''
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    print(item_id)
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
+    if inventory.verify_item(item_id, True, False) is False:
+        await ctx.send("weapon does not exist!")
     else:
         await ctx.send("Which character would you like to add this weapon to?")
         def check(m):
@@ -498,8 +494,10 @@ async def equip_weapon(ctx, name):
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
     print(item_id)
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
+    if inventory.verify_item(item_id, True, False) is False:
+        await ctx.send("weapon does not exist!")
     else:
         flavor = inventory.print_text(False, False, True, int(item_id))
         await ctx.send("Which character would you like to equip this weapon to?")
@@ -510,15 +508,19 @@ async def equip_weapon(ctx, name):
         except asyncio.TimeoutError:
             await ctx.send('Timeout occurred')
         else:
-            if sheet.verify_id(sheet.get_id(reply.content)) is False:
+            char_id = sheet.get_id(reply.content)
+            char_id = sheet.clean_up(str(char_id)).replace(",", "")
+            if sheet.verify_id(char_id) is False:
                 await ctx.send("This character could not be found!")
+            elif not inventory.verify_equippable(char_id, item_id, 'Weapon'):
+                await ctx.send("This item has not been added to the user!")
             else:
-                inventory.equip_weapon(item_id, sheet.get_id(reply.content), True)
+                inventory.equip_weapon(item_id, char_id, True)
                 if flavor is not None:
                     await ctx.send(str(reply.content) + ' ' +
                                    sheet.clean_up(str(flavor)).replace(',', '').strip('"'))
                 else:
-                    await ctx.send(str(reply.content) + "equipped the weapon.")
+                    await ctx.send(str(reply.content) + " equipped the weapon.")
 @bot.command()
 async def register_armor(ctx, name):
     '''This function allows a user to register a new armor to the database,
@@ -543,8 +545,10 @@ async def add_armor(ctx, name):
     taking in the name of the character.'''
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
+    if inventory.verify_item(item_id, False, True) is False:
+        await ctx.send("armor does not exist!")
     else:
         await ctx.send("Which character would you like to add this weapon to?")
         def check(m):
@@ -567,8 +571,10 @@ async def equip_armor(ctx, name):
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
     flavor = inventory.print_text(False, False, False, id)
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
+    if inventory.verify_item(item_id, False, True) is False:
+        await ctx.send("armor does not exist!")
     else:
         await ctx.send("Which character would you like to equip this weapon to?")
         def check(m):
@@ -578,10 +584,14 @@ async def equip_armor(ctx, name):
         except asyncio.TimeoutError:
             await ctx.send('Timeout occurred')
         else:
-            if sheet.verify_id(sheet.get_id(reply.content)) is False:
+            char_id = sheet.get_id(reply.content)
+            char_id = sheet.clean_up(str(char_id)).replace(",", "")
+            if sheet.verify_id(char_id) is False:
                 await ctx.send("This character could not be found!")
+            elif not inventory.verify_equippable(char_id, item_id, 'Armor'):
+                await ctx.send("This item has not been added to the user!")
             else:
-                inventory.equip_weapon(id, sheet.get_id(reply.content), False)
+                inventory.equip_weapon(item_id, char_id, False)
                 if flavor is None:
                     await ctx.send(str(reply.content) + ' ' +
                                    sheet.clean_up(str(flavor)).replace(',', '').strip('"'))
@@ -593,8 +603,8 @@ async def add_equip_flavor(ctx, name):
     of the item.'''
     item_id = inventory.find_item_id(name)
     item_id = sheet.clean_up(str(item_id)).replace(",", "")
-    if item_id is None:
-        await ctx.send("Item could not be found!")
+    if inventory.verify_item(item_id, False, False) is False:
+        await ctx.send("item does not exist!")
     else:
         await ctx.send("Please input your flavor text here.")
         def check(m):
@@ -617,7 +627,7 @@ async def add_dialogue(ctx, name):
     and prompts the user to input in the text.'''
     npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
-    if npc_id is None:
+    if not npc.verify_npc(npc_id, False):
         await ctx.send("NPC not found!")
     else:
         await ctx.send("Input your text here.")
@@ -637,7 +647,7 @@ async def talk_to(ctx, name):
     It takes in the npc's name.'''
     npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
-    if npc_id is None:
+    if not npc.verify_npc(npc_id, False):
         await ctx.send("NPC not found!")
     else:
         await ctx.send(name.upper() + ": " +
@@ -648,7 +658,7 @@ async def remove_npc(ctx, name):
     '''This method removes a npc from the database, taking in the npc's name.'''
     npc_id = npc.get_npc_id(name, False)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
-    if npc_id is None:
+    if not npc.verify_npc(npc_id, False):
         await ctx.send("NPC not found!")
     else:
         npc.remove_npc(npc_id, False)
@@ -680,7 +690,8 @@ async def register_enemy_stats(ctx, *args):
         await ctx.send('Timeout occurred')
     else:
         npc_id = npc.get_npc_id(reply.content, True)
-        if npc_id is None:
+        npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
+        if not npc.verify_npc(npc_id, True):
             await ctx.send("Character not found!")
         else:
             npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
@@ -691,7 +702,7 @@ async def remove_enemy(ctx, name):
     '''This method removes an enemy from the database, taking in the name of the enemy.'''
     npc_id = npc.get_npc_id(name, True)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
-    if npc_id is None:
+    if not npc.verify_npc(npc_id, True):
         await ctx.send("NPC not found!")
     else:
         npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
@@ -719,8 +730,8 @@ async def fight(ctx, player, name):
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
     mov = select.select_secondary(char_id)[8]
     mov = sheet.clean_up(str(mov)).replace(",", "")
-    if npc_id is None:
-        await ctx.send("NPC not found!")
+    if not npc.verify_npc(npc_id, True):
+        await ctx.send("Character not found!")
     elif sheet.verify_id(char_id) is False:
         await ctx.send("Player not found!")
     else:

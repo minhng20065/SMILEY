@@ -92,7 +92,6 @@ class Sheet:
         mysql_insert_row_values = (hp, char_id)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
-
     def calculations(self, prim, sec):
         '''This function performs the necessary calculations of secondary stats,
         based on the primary stats.'''
@@ -166,84 +165,6 @@ class Sheet:
             return False
         self.calculate_stat(char_id)
         return True
-
-    def find_rep(self, col, row, char_id):
-        '''This function finds the reputation data of a character given its ID,
-        and passes a function to update the reputation of the character in the 
-        database.'''
-        group = ""
-        tup = ()
-        tup2 = ()
-        if int(col) == 0:
-            group = "GOVERNMENT:"
-            mysql_insert_row_query = "SELECT government FROM rep_names "
-            self.connect(mysql_insert_row_query, 0, False, True)
-            tup = self.data
-            mysql_insert_row_query = "SELECT government FROM rep_desc "
-            self.connect(mysql_insert_row_query, 0, False, True)
-            tup2 = self.data
-        elif int(col) == 1:
-            group = "THORNLING RESISTANCE:"
-            mysql_insert_row_query = "SELECT resistance FROM rep_names "
-            self.connect(mysql_insert_row_query, 0, False, True)
-            tup = self.data
-            mysql_insert_row_query = "SELECT resistance FROM rep_desc "
-            self.connect(mysql_insert_row_query, 0, False, True)
-            tup2 = self.data
-        elif int(col) == 2:
-            group = "FREE BLACKTHORN LEAGUE:"
-            mysql_insert_row_query = "SELECT fbl FROM rep_names "
-            self.connect(mysql_insert_row_query, 0, False, True)
-            tup = self.data
-            mysql_insert_row_query = "SELECT fbl FROM rep_desc "
-            self.connect(mysql_insert_row_query, 0, False, True)
-            tup2 = self.data
-        else:
-            group = "PEACE CORPS:"
-            mysql_insert_row_query = "SELECT 'peace_corps' FROM rep_names "
-            self.connect(mysql_insert_row_query, 0, False, True)
-            tup = self.data
-            mysql_insert_row_query = "SELECT 'peace_corps' FROM rep_desc "
-            self.connect(mysql_insert_row_query, 0, False, True)
-            tup2 = self.data
-        self.update_rep(char_id, col, self.clean_up(str(tup[int(row)]).replace
-                                                  ("'", "").replace(",", "")))
-        return (group + self.clean_up(str(tup[int(row)]).replace("'", "").replace(",", ""))
-                + " - " + self.clean_up(str(tup2[int(row)]).replace("'", "").replace(",", "")))
-
-    def update_rep(self, char_id, col, values):
-        '''This function updates the reputation of a given character given its ID,
-        the group column, and the value you wish to change it to.'''
-        mysql_insert_row_query = ("SELECT char_id FROM reputation WHERE char_id = " +
-        + char_id + " LIMIT 1")
-        self.connect(mysql_insert_row_query, 0, False, False)
-        if self.data is None:
-            mysql_insert_row_query = ("INSERT INTO reputation (government, resistance, " +
-            "fbl, peace_corps, char_id) VALUES (%s, %s, %s, %s, %s)")
-            if int(col) == 0:
-                mysql_insert_row_values = (values, None, None, None, char_id)
-            elif int(col) == 1:
-                mysql_insert_row_values = (None, values, None, None, char_id)
-            elif int(col) == 2:
-                mysql_insert_row_values = (None, None, values, None, char_id)
-            else:
-                mysql_insert_row_values = (None, None, None, values, char_id)
-            self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
-
-        else:
-            if int(col) == 0:
-                mysql_insert_row_query = ("UPDATE reputation SET government = %s " +
-                "WHERE char_id = " + char_id)
-            elif int(col) == 1:
-                mysql_insert_row_query = ("UPDATE reputation SET resistance = %s " +
-                "WHERE char_id = " + char_id)
-            elif int(col) == 2:
-                mysql_insert_row_query = "UPDATE reputation SET fbl = %s WHERE char_id = " + char_id
-            else:
-                mysql_insert_row_query = ("UPDATE reputation SET peace_corps = %s " +
-                "WHERE char_id = " + char_id)
-            mysql_insert_row_values = (values,)
-            self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
     def clean_up(self, string):
         '''This function cleans up strings returned from the database, by removing outermost

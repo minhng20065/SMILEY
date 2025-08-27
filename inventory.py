@@ -65,6 +65,37 @@ class Inventory:
         mysql_insert_row_values = ('Armor', name, int(item_id), int(char_id), int(defe), 0, 0)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
+    def verify_item(self, item_id, weapon, armor):
+        '''This method verifies if the items exist in the database, taking in the 
+        id of the item, and if the item is weapon or armor.'''
+        if weapon:
+            mysql_insert_row_query = "SELECT 1 FROM weapons WHERE id = " + item_id
+            self.connect(mysql_insert_row_query, 0, False, False)
+            if self.data is None:
+                return False
+            return True
+        if armor:
+            mysql_insert_row_query = "SELECT 1 FROM armor WHERE id = " + item_id
+            self.connect(mysql_insert_row_query, 0, False, False)
+            if self.data is None:
+                return False
+            return True
+        mysql_insert_row_query = "SELECT 1 FROM items WHERE id = " + item_id
+        self.connect(mysql_insert_row_query, 0, False, False)
+        if self.data is None:
+            return False
+        return True
+
+    def verify_equippable(self, char_id, item_id, type_item):
+        '''This method verifies if an object is equippable and belongs to a character,
+        checking for character id, item id, and which type it is.'''
+        mysql_insert_row_query = (f"SELECT 1 FROM equippable_items WHERE id = '{item_id}' " +
+                                f"AND char_id = '{char_id}' AND Type = '{type_item}'")
+        self.connect(mysql_insert_row_query, 0, False, False)
+        if self.data is None:
+            return False
+        return True
+
     def equip_weapon(self, item_id, char, weapons):
         '''This method allows a character to equip a weapon, by taking it's id, the character
         id of the character equipping, and whether or not it is a weapons.'''
@@ -82,8 +113,8 @@ class Inventory:
             "AND char_id = %s AND Equipped = %s AND Type = %s")
             mysql_insert_row_values = (0, item_id, char, 1, 'Armor')
             self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
-            mysql_insert_row_query = ("UPDATE equippable_items SET Equipped = %s " +
-            "WHERE id = %s AND char_id = %s")
+            mysql_insert_row_query = ("UPDATE equippable_items " +
+            "SET Equipped = %s WHERE id = %s AND char_id = %s")
             mysql_insert_row_values = (1, item_id, char)
             self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 
@@ -118,14 +149,14 @@ class Inventory:
     def find_equipped(self, char_id, weapon):
         '''This method finds any equipped equipment that the player has.'''
         if weapon:
-            mysql_insert_row_query = ("SELECT Modifier FROM equippable_items WHERE" +
-                                      f"char_id = {char_id} AND Equipped = 1 AND Type = Weapon")
+            mysql_insert_row_query = ("SELECT Modifier FROM equippable_items WHERE " +
+                                f"char_id = {int(char_id)} AND Equipped = 1 AND Type = 'Weapon'")
             self.connect(mysql_insert_row_query, 0, False, False)
             if self.data is None:
                 return 0
             return self.data
-        mysql_insert_row_query = ("SELECT Modifier FROM equippable_items WHERE" +
-                                      f"char_id = {char_id} AND Equipped = 1 AND Type = Armor")
+        mysql_insert_row_query = ("SELECT Modifier FROM equippable_items WHERE " +
+                                f"char_id = {int(char_id)} AND Equipped = 1 AND Type = 'Armor'")
         self.connect(mysql_insert_row_query, 0, False, False)
         if self.data is None:
             return 0
@@ -226,9 +257,18 @@ class Inventory:
         mysql_insert_row_query = "DELETE FROM equip_flavor_text WHERE item_id = %s"
         mysql_insert_row_values = (item_id,)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = "DELETE FROM equippable_items WHERE id = %s"
+        mysql_insert_row_values = (item_id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
         mysql_insert_row_query = "DELETE FROM inventory WHERE id = %s"
         mysql_insert_row_values = (item_id,)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
         mysql_insert_row_query = "DELETE FROM use_flavor_text WHERE item_id = %s"
+        mysql_insert_row_values = (item_id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = "DELETE FROM weapons WHERE item_id = %s"
+        mysql_insert_row_values = (item_id,)
+        self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
+        mysql_insert_row_query = "DELETE FROM armor WHERE item_id = %s"
         mysql_insert_row_values = (item_id,)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
