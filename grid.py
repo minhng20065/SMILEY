@@ -104,7 +104,7 @@ class Grid:
                         self.trace_path(cell_details)
                         found_dest = True
                         print("destination found!")
-                        return
+                        return True
                     else:
                         g_new = cell_details[i][j].g + 1.0
                         h_new = self.calc_heur(new_i, new_j)
@@ -121,6 +121,7 @@ class Grid:
         self.trace_path(cell_details)
         if not found_dest:
             print("failed to find the destination cell")
+            return False
 
     def range(self):
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]

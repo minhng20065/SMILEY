@@ -771,6 +771,8 @@ async def attack(ctx, player, npc_id, enemy, mov):
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
     en_hp = npc.get_enemy_stats(npc_id)[0]
     en_hp = sheet.clean_up(str(en_hp)).replace(",", "")
+    max_hp = npc.get_enemy_stats(npc_id)[5]
+    max_hp = sheet.clean_up(str(max_hp)).replace(",", "")
     atk = select.select_secondary(char_id)[6]
     atk = sheet.clean_up(str(atk)).replace(",", "")
     en_atk = inventory.find_equipped(char_id, True)
@@ -783,7 +785,11 @@ async def attack(ctx, player, npc_id, enemy, mov):
         en_hp = int(en_hp) - attack
         await ctx.send(f"Attacked enemy for {attack} damage!")
         npc.sim_dam(en_hp, npc_id)
-        return await enemy_turn(ctx, player, npc_id, enemy)
+        if (en_hp < 0):
+            await ctx.send("The enemy was defeated! Battle over.")
+            npc.sim_dam(max_hp, npc_id)
+            return
+        return await turn(ctx, player, npc_id, enemy, mov)
 
 async def enemy_turn(ctx, player, npc_id, enemy):
     char_id = sheet.get_id(player)
@@ -792,11 +798,31 @@ async def enemy_turn(ctx, player, npc_id, enemy):
     player_mov = sheet.clean_up(str(player_mov)).replace(",", "")
     mov = npc.get_enemy_stats(npc_id)[3]
     mov = int(sheet.clean_up(str(mov)).replace(",", ""))
-    grid.a_star(mov)
+    if (grid.a_star(mov)):
+        await enemy_attack(ctx, player, npc_id)
     enemy = enemy[0]
     chara = player[0]
     await ctx.send("```" + grid.generate_grid(chara, enemy) + "```")
     await turn(ctx, player, npc_id, enemy, int(player_mov))
+
+async def enemy_attack(ctx, player, npc_id):
+    print("sex")
+    char_id = sheet.get_id(player)
+    char_id = sheet.clean_up(str(char_id)).replace(",", "")
+    pl_hp = select.select_secondary(char_id)[2]
+    pl_hp = sheet.clean_up(str(pl_hp)).replace(",", "")
+    en_atk = npc.get_enemy_stats(npc_id)[1]
+    en_atk = sheet.clean_up(str(en_atk)).replace(",", "")
+    max_hp = select.select_secondary(char_id)[1]
+    max_hp = sheet.clean_up(str(max_hp)).replace(",", "")
+    hp = int(pl_hp) - int(en_atk)
+    sheet.sim_dam(hp, char_id)
+    if (hp < 0):
+            await ctx.send("You were killed in battle... battle lost!")
+            sheet.sim_dam(max_hp, char_id)
+            return
+    await ctx.send(f"Enemy attacked for {en_atk} damage!")
+
 
 
 async def add_weapon_to_sheet(ctx, item_id, name, char):
