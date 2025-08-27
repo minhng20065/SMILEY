@@ -80,13 +80,15 @@ class Sheet:
         mysql_insert_row_query = ("UPDATE secondary_stats SET MAX_HP = %s, HP = %s, MAX_XP = %s, "+
         "XP = %s, RECOVERY = %s, DAM = %s, PRO = %s, MOV = %s, MAX_AMP = %s, AMP = %s, " +
         "AMP_GAIN = %s, INV = %s, CRT = %s WHERE char_id = %s")
-        mysql_insert_row_values = (stats[0], stats[0], stats[1], stats[2], stats[3], stats[4], stats[5],
-                                   stats[6],stats[7], stats[8], stats[9], stats[10], stats[11],
-                                   char_id)
+        mysql_insert_row_values = (stats[0], stats[0], stats[1], stats[2], stats[3], stats[4],
+                                   stats[5], stats[6],stats[7], stats[8], stats[9], stats[10],
+                                    stats[11], char_id)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
-    
+
     def sim_dam(self, hp, char_id):
-        mysql_insert_row_query = ("UPDATE secondary_stats SET HP = %s WHERE char_id = %s")
+        '''This method simulates damage done to a character, given the amount of
+        damage done and the character's id.'''
+        mysql_insert_row_query = "UPDATE secondary_stats SET HP = %s WHERE char_id = %s"
         mysql_insert_row_values = (hp, char_id)
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 

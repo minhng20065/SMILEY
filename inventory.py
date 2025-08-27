@@ -114,15 +114,22 @@ class Inventory:
         mysql_insert_row_query = f"SELECT DEF FROM armor WHERE id = {item_id}"
         self.connect(mysql_insert_row_query, 0, False, False)
         return self.data
-    
+
     def find_equipped(self, char_id, weapon):
+        '''This method finds any equipped equipment that the player has.'''
         if weapon:
-            mysql_insert_row_query = f"SELECT Modifier FROM equippable_items WHERE char_id = {char_id} AND Equipped = 1"
+            mysql_insert_row_query = ("SELECT Modifier FROM equippable_items WHERE" +
+                                      f"char_id = {char_id} AND Equipped = 1 AND Type = Weapon")
             self.connect(mysql_insert_row_query, 0, False, False)
-            if (self.data == None):
+            if self.data is None:
                 return 0
-            else:
-                return self.data
+            return self.data
+        mysql_insert_row_query = ("SELECT Modifier FROM equippable_items WHERE" +
+                                      f"char_id = {char_id} AND Equipped = 1 AND Type = Armor")
+        self.connect(mysql_insert_row_query, 0, False, False)
+        if self.data is None:
+            return 0
+        return self.data
     def find_inv_count(self, char_id):
         '''This method counts the amount of items in a character's inventory, given
         the character's id.'''

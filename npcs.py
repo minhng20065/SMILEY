@@ -53,9 +53,10 @@ class NPC:
         mysql_insert_row_query = f"SELECT npc_id FROM npc WHERE Name = '{name}'"
         self.connect(mysql_insert_row_query, 0, False, False)
         return self.data
-    
-    def get_enemy_stats(self, id):
-        mysql_insert_row_query = "SELECT * FROM enemy_stats WHERE npc_id = " + id
+
+    def get_enemy_stats(self, npc_id):
+        '''This method gets the enemy stats from the database, given the enemy's id.'''
+        mysql_insert_row_query = "SELECT * FROM enemy_stats WHERE npc_id = " + npc_id
         self.connect(mysql_insert_row_query, 0, False, False)
         return self.data
 
@@ -64,12 +65,14 @@ class NPC:
         the enemy.'''
         mysql_insert_row_query = ("UPDATE enemy_stats SET HP = %s, DAM = %s, PRO = %s, " +
         "MOV = %s, max_hp = %s WHERE npc_id = %s")
-        mysql_insert_row_values = (int(args[0]), int(args[1]), int(args[2]), int(args[3]), int(args[0]),
-                                   int(npc_id))
+        mysql_insert_row_values = (int(args[0]), int(args[1]), int(args[2]), int(args[3]),
+                                   int(args[0]), int(npc_id))
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
-    
+
     def sim_dam(self, hp, npc_id):
-        mysql_insert_row_query = ("UPDATE enemy_stats SET HP = %s WHERE npc_id = %s")
+        '''This method simulates damage done to an enemy, given the amount of
+        damage done and the enemy's id.'''
+        mysql_insert_row_query = "UPDATE enemy_stats SET HP = %s WHERE npc_id = %s"
         mysql_insert_row_values = (hp, int(npc_id))
         self.connect(mysql_insert_row_query, mysql_insert_row_values, True, False)
 

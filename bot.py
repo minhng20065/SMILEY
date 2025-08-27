@@ -699,8 +699,10 @@ async def remove_enemy(ctx, name):
         await ctx.send("NPC removed!")
 
 @bot.command()
-async def adjustGrid(ctx, row, col):
-    if error.verify_numeric:
+async def adjust_grid(ctx, row, col):
+    '''This method allows a player to adjust the size of the grid,
+    given the grid's new dimensions.'''
+    if error.verify_numeric(row) and error.verify_numeric(col):
         grid.adjust_size(int(row), int(col))
     else:
         await ctx.send("Inputs are invalid!")
@@ -709,6 +711,8 @@ async def adjustGrid(ctx, row, col):
 
 @bot.command()
 async def fight(ctx, player, name):
+    '''This method simulates a battle between the player and an enemy of their choice.
+    It allows turns to be played, generating a grid for every turn.'''
     npc_id = npc.get_npc_id(name, True)
     npc_id = sheet.clean_up(str(npc_id)).replace(",", "")
     char_id = sheet.get_id(player)
@@ -728,11 +732,16 @@ async def fight(ctx, player, name):
         await turn(ctx, player, npc_id, enemy, int(mov))
 
 async def turn(ctx, player, npc_id, enemy, mov):
+    '''This method simulates a player turn, giving the player choices on whether to
+    move or attack the enemy once they are in range. It takes in the player
+    name, enemy id, enemy name, and the player's movement.'''
     char_id = sheet.get_id(player)
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
     await ctx.send("You have " + str(mov) + " MOV left.")
-    await ctx.send("Which direction do you want to move, and how far? Or press S to end the turn, or X to attack and end the turn.")
-    await ctx.send("Input both values like this: DirectionNumber(UP(U), DOWN(D), LEFT(L), RIGHT(R)), then Number")
+    await ctx.send("Which direction do you want to move, and how far? Or press S to end the "
+    "turn, or X to attack.")
+    await ctx.send("Input both values like this: DirectionNumber(UP(U), "
+    "DOWN(D), LEFT(L), RIGHT(R)), then Number")
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
     try:
@@ -767,6 +776,10 @@ async def turn(ctx, player, npc_id, enemy, mov):
         return await turn(ctx, player, npc_id, enemy, mov)
 
 async def attack(ctx, player, npc_id, enemy, mov):
+    '''This method simulates a player attack in battle,
+    checking if the player is in range. If they are, the 
+    player's attack damage is subtracted from the enemy's health pool.
+    If the enemy's health is less than 0, the battle ends.'''
     char_id = sheet.get_id(player)
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
     en_hp = npc.get_enemy_stats(npc_id)[0]
@@ -777,28 +790,35 @@ async def attack(ctx, player, npc_id, enemy, mov):
     atk = sheet.clean_up(str(atk)).replace(",", "")
     en_atk = inventory.find_equipped(char_id, True)
     en_atk = sheet.clean_up(str(en_atk)).replace(",", "")
-    attack = int(atk) + int(en_atk)
-    if not grid.range():
+    en_def = npc.get_enemy_stats(npc_id)[2]
+    en_def = sheet.clean_up(str(en_atk)).replace(",", "")
+    atack = int(atk) + int(en_atk)
+    if not grid.ranger():
         await ctx.send("not in attack range!")
         await turn(ctx, player, npc_id, enemy, mov)
     else:
-        en_hp = int(en_hp) - attack
-        await ctx.send(f"Attacked enemy for {attack} damage!")
+        if int(en_def) >= atack:
+            en_hp = int(en_hp) - 1
+        else:
+            en_hp = int(en_hp) - atack + int(en_def)
+        await ctx.send(f"Attacked enemy for {atack} damage!")
         npc.sim_dam(en_hp, npc_id)
-        if (en_hp < 0):
+        if en_hp < 0:
             await ctx.send("The enemy was defeated! Battle over.")
             npc.sim_dam(max_hp, npc_id)
             return
         return await turn(ctx, player, npc_id, enemy, mov)
 
 async def enemy_turn(ctx, player, npc_id, enemy):
+    '''This method simulated an enemy turn, running the A* algorithm
+    and allowing it to attack once it reaches the player.'''
     char_id = sheet.get_id(player)
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
     player_mov = select.select_secondary(char_id)[8]
     player_mov = sheet.clean_up(str(player_mov)).replace(",", "")
     mov = npc.get_enemy_stats(npc_id)[3]
     mov = int(sheet.clean_up(str(mov)).replace(",", ""))
-    if (grid.a_star(mov)):
+    if grid.a_star(mov):
         await enemy_attack(ctx, player, npc_id)
     enemy = enemy[0]
     chara = player[0]
@@ -806,7 +826,8 @@ async def enemy_turn(ctx, player, npc_id, enemy):
     await turn(ctx, player, npc_id, enemy, int(player_mov))
 
 async def enemy_attack(ctx, player, npc_id):
-    print("sex")
+    '''This method simulates an enemy attack. Its damage is reduced
+    from the player healing pool, and if that reaches 0, the player loses.'''
     char_id = sheet.get_id(player)
     char_id = sheet.clean_up(str(char_id)).replace(",", "")
     pl_hp = select.select_secondary(char_id)[2]
@@ -815,12 +836,20 @@ async def enemy_attack(ctx, player, npc_id):
     en_atk = sheet.clean_up(str(en_atk)).replace(",", "")
     max_hp = select.select_secondary(char_id)[1]
     max_hp = sheet.clean_up(str(max_hp)).replace(",", "")
-    hp = int(pl_hp) - int(en_atk)
+    pl_def = select.select_secondary(char_id)[7]
+    pl_def = sheet.clean_up(str(pl_def)).replace(",", "")
+    pl_armor = inventory.find_equipped(char_id, False)
+    pl_armor = sheet.clean_up(str(pl_armor)).replace(",", "")
+    defense = int(pl_def) + int(pl_armor)
+    if defense >= int(en_atk):
+        hp = int(pl_hp) - 1
+    else:
+        hp = int(pl_hp) - int(en_atk) + defense
     sheet.sim_dam(hp, char_id)
-    if (hp < 0):
-            await ctx.send("You were killed in battle... battle lost!")
-            sheet.sim_dam(max_hp, char_id)
-            return
+    if hp < 0:
+        await ctx.send("You were killed in battle... battle lost!")
+        sheet.sim_dam(max_hp, char_id)
+        return
     await ctx.send(f"Enemy attacked for {en_atk} damage!")
 
 
