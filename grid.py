@@ -70,8 +70,12 @@ class Grid:
         if self.is_destination(self.en_pos_x, self.en_pos_y):
             print("already there!")
             return False
+        # creates a list to track cells already visited
         closed_list = [[False for _ in range(self.col)] for _ in range(self.row)]
+        # initialize each cell's details
         cell_details = [[Grid() for _ in range(self.col)] for _ in range(self.row)]
+
+        #initialize the starting cell
         i = self.en_pos_y
         j = self.en_pos_x
         cell_details[i][j].f = 0
@@ -79,41 +83,52 @@ class Grid:
         cell_details[i][j].h = 0
         cell_details[i][j].parent_i = i
         cell_details[i][j].parent_j = j
+        # intialize cells to be visited
         open_list = []
         heapq.heappush(open_list, (0.0, i, j))
         found_dest = False
 
         while (len(open_list) > 0 and mov > 0):
+            # pop the cell with the smallest f-value
             p = heapq.heappop(open_list)
+            # mark that cell as visited
             i = p[1]
             j = p[2]
             closed_list[i][j] = True
+            # check each direction
             for new_dir in self.directions:
                 new_i = i + new_dir[0]
                 new_j = j + new_dir[1]
+                # if the successor is valid and unvisited:
                 if self.is_valid(new_j, new_i) and not closed_list[new_i][new_j]:
                     self.en_pos_y = new_i
                     self.en_pos_x = new_j
                     if self.is_destination(new_j, new_i):
+                        # set the parent of the destination cell
                         cell_details[new_i][new_j].parent_i = i
                         cell_details[new_i][new_j].parent_j = j
                         self.en_pos_y = i
                         self.en_pos_x = j
+                        # print the path from start to destination
                         self.trace_path(cell_details)
                         found_dest = True
                         print("destination found!")
                         return True
+                    # else, calculate the new values
                     g_new = cell_details[i][j].g + 1.0
                     h_new = self.calc_heur(new_i, new_j)
                     f_new = g_new + h_new
+                    # if the cell is not in the open list or the f value is smaller
                     if (cell_details[new_i][new_j].f == float('inf')
                         or cell_details[new_i][new_j].f > f_new):
+                        # update the cell details
                         heapq.heappush(open_list, (f_new, new_i, new_j))
                         cell_details[new_i][new_j].f = f_new
                         cell_details[new_i][new_j].g = g_new
                         cell_details[new_i][new_j].h = h_new
                         cell_details[new_i][new_j].parent_i = i
                         cell_details[new_i][new_j].parent_j = j
+            #signify that the enemy has moved once
             mov = mov - 1
         self.trace_path(cell_details)
         if not found_dest:
@@ -123,6 +138,7 @@ class Grid:
 
     def ranger(self):
         '''This method checks whether or not players are in range for an attack.'''
+        # checks every direction to see if players are in range
         for new_dir in self.directions:
             new_x = self.pl_pos_x + new_dir[0]
             new_y = self.pl_pos_y + new_dir[1]
@@ -168,6 +184,7 @@ class Grid:
         diff = 0
         if direction == 'U':
             self.pl_pos_y -= value
+            # if player hits the boundaries, keep them constrained
             if self.pl_pos_y < 0:
                 diff = 0 - self.pl_pos_y
                 self.pl_pos_y = 0

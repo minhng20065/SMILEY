@@ -171,17 +171,21 @@ class Sheet:
         parentheses.'''
         n = len(string)
         cnt = 0
+        # couns the number of unbalanced parantheses
         while (cnt < n and string[cnt] == '(' and string[n - cnt - 1] == ')'):
             cnt += 1
         cnt_min_par = 0
         cnt_unbal = 0
+        # while unbalanced parantheses exist:
         for i in range(cnt, n - cnt):
             if string[i] == '(':
                 cnt_unbal += 1
             elif string[i] == ')':
                 cnt_unbal -= 1
+            # find the smallest no. of parantheses
             cnt_min_par = min(cnt_min_par, cnt_unbal)
         cnt += cnt_min_par
+        # return the balanced string
         return string[cnt: n-cnt]
 
     def calculate_slots(self, char_id):
@@ -190,7 +194,7 @@ class Sheet:
         mysql_insert_row_query = "SELECT LVL FROM secondary_stats WHERE char_id = " + char_id
         self.connect(mysql_insert_row_query, 0, False, False)
         val = int(self.data[0])
-        if val < 10:
+        if val < 10: # if below level 10, only one slot is afforded to the character.
             return 1
         if 10 < val < 20:
             return 2

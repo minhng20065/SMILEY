@@ -89,10 +89,13 @@ async def primary(ctx, *args):
             await ctx.send("One of your arguments is invalid! Please try again.")
             return
     await ctx.send("What character should these stats be assigned to?")
+    # checks if the author is the one who wrote the original command, and
+    # that they are both in the same channel.
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
     try:
         reply = await bot.wait_for('message', timeout=60.0, check=check)
+    # if you take too long, the system times out.
     except asyncio.TimeoutError:
         await ctx.send('Timeout occurred')
     else:
